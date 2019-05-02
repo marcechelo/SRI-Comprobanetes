@@ -267,6 +267,10 @@ def downloadxml(request):
 
     if len(dataDocumentArray) != 0:
         root = tkinter.Tk()
+        root.lift()
+        root.attributes('-topmost',True)
+        root.after_idle(root.attributes,'-topmost',False)
+        root.geometry("0x0")
         dirname = filedialog.askdirectory(parent=root, initialdir="/", title='Please select a directory')
         print(dirname)
         root.destroy()
@@ -679,8 +683,11 @@ def downloadeExcel(request):
     if len(dataDocumentArray) != 0 :
         
         root = tkinter.Tk()
-        dirname = filedialog.askdirectory(parent=root, initialdir="/", title='Please select a directory')
-        workbook = xlsxwriter.Workbook(dirname+'/factura.xlsx') 
+        root.lift()
+        root.attributes('-topmost',True)
+        root.after_idle(root.attributes,'-topmost',False)
+        dirname = filedialog.asksaveasfilename(filetypes = (("Excel files", "*.xlsx"),("All files", "*.*") ))
+        workbook = xlsxwriter.Workbook(dirname+'.xlsx') 
         worksheet = workbook.add_worksheet() 
         print(dirname)
         root.destroy()
@@ -1019,3 +1026,8 @@ def downloadeExcel(request):
             return HttpResponse(2)
     else:
         return HttpResponse(0)
+
+def path(request):
+    name = filedialog.asksaveasfilename(filetypes = (("Excel files", "*.xlsx"),("All files", "*.*") ))
+    print('nombre: '+ name)
+    return HttpResponse('done')

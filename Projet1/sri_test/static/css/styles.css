@@ -25,6 +25,10 @@ i:hover {
       font-weight: bold;
   }
 
+  .hide{
+    display: initial;
+  }
+
   #buttonSeleccion1, 
   #buttonSeleccion2, 
   #buttonSeleccion3,

@@ -17,4 +17,5 @@ urlpatterns = [
 
     path('read/', views.read_txt, name= 'read'),
     path('createPDF/', views.createPDF, name = 'createPDF'),
+    path('path/', views.path, name = 'path'),
 ]

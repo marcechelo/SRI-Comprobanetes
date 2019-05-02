@@ -18,6 +18,11 @@
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
 
 </head>
 
@@ -25,7 +30,6 @@
 
     {% block content %}
     
-
         <div class="row" style="height: 100%;">
 
             <div class="col-sm-12"
@@ -95,10 +99,10 @@
                     <div class="col-sm-12" style="margin-left: -1rem">
                         
                         <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">
-                            <button id="buttonSeleccion1" type="submit" class="btn btn-secondary"><i
-                                    class="fa fa-eye"></i> VISUALIZAR</button>
+                            <button id="buttonSeleccion1" type="submit" class="btn btn-secondary">
+                                <i class="fa fa-eye"></i> VISUALIZAR</button>
                         </form>
-                            <button id="buttonSeleccion2" type="button" class="btn btn-secondary"><i
+                            <button tabindex="0" id="buttonSeleccion2" type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus."><i
                                     class="fa fa-cloud-download"></i> DESCARGAR XML</button>
                                 
 
@@ -164,7 +168,14 @@
                 </div>
 
             </div>
-
+            <div id="toastClass" class="toast" style="display: none">
+                    <div class="toast-header">
+                      Toast Header
+                    </div>
+                    <div class="toast-body">
+                      Some text inside the toast body
+                    </div>
+                  </div>
         </div>
 
     {% endblock %}
@@ -186,7 +197,6 @@
                 if(data == 0){
                     alert( "Debe seleccionar un archivo");
                     $("#buttonSeleccion2").removeClass("active");
-
                 }
                 if(data == 2) {
                     alert( "Debe seleccionar una carpeta de destino");
@@ -194,7 +204,8 @@
                     
                 } 
                 if (data == 1) {
-                    alert( "Documentos Descargados correctamente");
+                    alert( "Documentos XML descargados correctamente");
+                    $("#buttonSeleccion2").removeClass("active");
                 }
                 
             });
@@ -219,7 +230,8 @@
                     
                 } 
                 if (data == 1) {
-                    alert( "Documentos Descargados correctamente");
+                    alert( "Documento Excel descargado correctamente");
+                    $("#buttonSeleccion4").removeClass("active");
                 }
             });
         });
