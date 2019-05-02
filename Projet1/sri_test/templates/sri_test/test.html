@@ -93,11 +93,10 @@
                     <!-- Opciones para mostrar y descarga -->
 
                     <div class="col-sm-12" style="margin-left: -1rem">
-
+                        
                         <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">
                             <button id="buttonSeleccion1" type="submit" class="btn btn-secondary"><i
                                     class="fa fa-eye"></i> VISUALIZAR</button>
-                        
                         </form>
                             <button id="buttonSeleccion2" type="button" class="btn btn-secondary"><i
                                     class="fa fa-cloud-download"></i> DESCARGAR XML</button>
@@ -183,7 +182,22 @@
         $("#buttonSeleccion2").click(function () {
             $("button").removeClass("active");
             $(this).addClass("active");
-            $.get('/downloadxml/');
+            $.get('/downloadxml/', function(data) {
+                if(data == 0){
+                    alert( "Debe seleccionar un archivo");
+                    $("#buttonSeleccion2").removeClass("active");
+
+                }
+                if(data == 2) {
+                    alert( "Debe seleccionar una carpeta de destino");
+                    $("#buttonSeleccion2").removeClass("active");
+                    
+                } 
+                if (data == 1) {
+                    alert( "Documentos Descargados correctamente");
+                }
+                
+            });
         });
         $("#buttonSeleccion3").click(function () {
             $("button").removeClass("active");
@@ -208,7 +222,6 @@
             $("#titulo").text("COMPROBANTES EMITIDOS");
             $.get('/emitidos/');
         });
-        
 
     </script>
 

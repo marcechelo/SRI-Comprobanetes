@@ -264,30 +264,40 @@ def reload(request):
 
 def downloadxml(request):
     global fileUploaded, dataDocumentArray
-    if request.method == 'GET':
-        for i in dataDocumentArray:
-            # print("______________________________________")
-            # print(i[8])
-            headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
-            body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-            body += "    <Body>"
-            body += "       <autorizacionComprobante xmlns=\"http://ec.gob.sri.ws.autorizacion\">"
-            body += "           <claveAccesoComprobante xmlns=\"\">"+i[8]+"</claveAccesoComprobante>"
-            body += "       </autorizacionComprobante>"
-            body += "    </Body>"
-            body += "</Envelope>"
-            r = requests.post(url="https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl", data=body, headers=headers)
-            xml_response = r.text
-            xml_response = xml_response.replace("&lt;","<")
-            xml_response = xml_response.replace("&#xd;","")
-            with open(os.path.join(os.path.join(os.path.expanduser('~'),'Downloads',i[8]+".xml")), "w+") as file1:
-                file1.write(xml_response)
-            #f = open(i[8]+".xml","w+")
-            #f.write(xml_response)
-        #print(dataDocumentArray)
-        context = {'message': 'ok'}
-        return HttpResponse(context)
 
+    if len(dataDocumentArray) != 0:
+        root = tkinter.Tk()
+        dirname = filedialog.askdirectory(parent=root, initialdir="/", title='Please select a directory')
+        print(dirname)
+        root.destroy()
+        if dirname != '':
+            for i in dataDocumentArray:
+                # print("______________________________________")
+                # print(i[8])
+                headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
+                body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+                body += "    <Body>"
+                body += "       <autorizacionComprobante xmlns=\"http://ec.gob.sri.ws.autorizacion\">"
+                body += "           <claveAccesoComprobante xmlns=\"\">"+i[8]+"</claveAccesoComprobante>"
+                body += "       </autorizacionComprobante>"
+                body += "    </Body>"
+                body += "</Envelope>"
+                r = requests.post(url="https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl", data=body, headers=headers)
+                xml_response = r.text
+                xml_response = xml_response.replace("&lt;","<")
+                xml_response = xml_response.replace("&#xd;","")
+                with open(os.path.join(os.path.join(os.path.expanduser('~'),dirname,i[8]+".xml")), "w+") as file1:
+                    file1.write(xml_response)
+                #f = open(i[8]+".xml","w+")
+                #f.write(xml_response)
+                #print(dataDocumentArray)
+            return HttpResponse(1)
+        else:
+            return HttpResponse(2)
+    else:
+        return HttpResponse(0)
+        
+    
 def downloadPdf(request):
     global fileUploaded, dataDocumentArray
     count = 0
