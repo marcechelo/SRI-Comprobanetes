@@ -1,0 +1,217 @@
+{% load staticfiles %}
+<html>
+
+<head>
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+
+</head>
+
+<body>
+
+    {% block content %}
+    
+
+        <div class="row" style="height: 100%;">
+
+            <div class="col-sm-12"
+                style="background: linear-gradient(to right, #4a8f82 0%, #818f66 25%, #a28f56 50%, #b88f4b 75%, #e68f35 100%);">
+                <h2>Logo</h2>
+            </div>
+
+            <div class="col-sm-2" style="background: rgba(217, 217, 217, 1); text-align: center; padding-bottom: 2rem;">
+                <div style="padding-top: 2rem">
+                    <i id="planeRecibido" class="fa fa-paper-plane-o planeColor" style="color: #e68f35"></i>
+                    <button id="buttonRecibido" class="buttonComprobantes" type="button">COMPROBANTES RECIBIDOS</button>
+                </div>
+                <div style="padding-top: 2rem">
+                    <i id="planeEmitido" class="fa fa-paper-plane-o" style="color: black"></i>
+                    <button id="buttonEmitido" class="buttonComprobantes" type="button">COMPROBANTES EMITIDOS</button>
+                </div>
+            </div>
+            <div class="col-sm-10" style="background: rgba(237, 236, 236, 1);">
+
+                <div class="row" style="padding-left: 2rem;">
+
+                    <!-- Comprobantes recibidos-emitidos  -->
+
+                    <div class="col-sm-12" style="text-align: center; padding-top: 1rem; padding-right: 2rem">
+                        <div class="comprobantes"
+                            style="height: 2rem; line-height: 2rem; text-align: center; background: linear-gradient(to right, #fbfbfb 0%, #c7c7c7 25%, #9f9e9e 50%, #c7c7c7 75%, #fbfbfb 100%)">
+                            <span id="titulo" style="color: white; padding-top: 1rem">COMPROBANTES RECIBIDOS</span>
+                        </div>
+
+                    </div>
+
+                    <!-- Seccion para seleccionar el archivo -->
+
+                    <div class="col-sm-4"></div>
+                    
+                    <div class="col-sm-4" style="padding-top: 2rem">
+                        <div class="input-group mb-3">
+                              
+                            <div class="input-group-prepend"> 
+                                    <form method="post" action="{% url 'sri_test:test' %}" enctype="multipart/form-data">
+                                        {% csrf_token %}                                
+                                <button id="trashButton" type="submit" class="btn btn-secondary"
+                                    style="background-color: white; border-color: #ced4da; height: 2.4rem;"><i class="fa fa-trash"
+                                        style="color: black"></i></button>  
+                                    </form>
+                                        
+                            </div>
+                            <div class="custom-file">
+                                
+                                    <form method="post" action="{% url 'sri_test:test' %}" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                <input type="file" class="custom-file-input" id="inputGroupFile03"
+                                    aria-describedby="inputGroupFileAddon03" name="document">
+                                <label class="custom-file-label" for="inputGroupFile03"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4"></div>
+
+                </div>
+
+                <div class="row"
+                    style="background: rgba(237, 236, 236, 1); width: 100%; padding-top: 1px; padding-left: 1rem">
+
+                    <!-- Opciones para mostrar y descarga -->
+
+                    <div class="col-sm-12" style="margin-left: -1rem">
+
+                        <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">
+                            <button id="buttonSeleccion1" type="submit" class="btn btn-secondary"><i
+                                    class="fa fa-eye"></i> VISUALIZAR</button>
+                        
+                        </form>
+                            <button id="buttonSeleccion2" type="button" class="btn btn-secondary"><i
+                                    class="fa fa-cloud-download"></i> DESCARGAR XML</button>
+                                
+
+                            <button id="buttonSeleccion3" type="button" class="btn btn-secondary"><i
+                                    class="fa fa-cloud-download"></i> DESCARGAR PDF</button>
+                            <button id="buttonSeleccion4" type="button" class="btn btn-secondary"><i
+                                    class="fa fa-cloud-download"></i> DESCARGAR EXCEL</button>
+
+                        </div>
+                    </div>
+
+                    <!-- Cuadro para mostrar tabla -->
+
+                    <div class="col-sm-12" style="border-style: solid; border-width: 1px; border-color: black">
+
+                        {% if comprobantes_data %}
+                        <table class="table table-responsive">
+                            <thead>
+                                <tr>
+                                    <th scope="col">#</th>
+                                    <th scope="col">Comprobante</th>
+                                    <th scope="col">Serie Comprobante</th>
+                                    <th scope="col">RUC Emisor</th>
+                                    <th scope="col">Razon Social</th>
+                                    <th scope="col">Fecha Emision</th>
+                                    <th scope="col">Fecha Autorizacion</th>
+                                    <th scope="col">Tipo Emision</th>
+                                    <th scope="col">Identificacion Receptor</th>
+                                    <th scope="col">Clave Acceso</th>
+                                    <th scope="col">Numero Autorizacion</th>
+                                    <th scope="col">Imorte Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in comprobantes_data %}
+                                <tr>
+                                    <th scope="row">{{forloop.counter}}</th>
+                                    <td>{{item.0}}</td>
+                                    <td>{{item.1}}</td>
+                                    <td>{{item.2}}</td>
+                                    <td>{{item.3}}</td>
+                                    <td>{{item.4}}</td>
+                                    <td>{{item.5}}</td>
+                                    <td>{{item.6}}</td>
+                                    <td>{{item.7}}</td>
+                                    <td>{{item.8}}</td>
+                                    <td>{{item.9}}</td>
+                                    <td>{{item.10}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div style="height: 20rem; text-align: center">
+                            <h5 style="padding-top: 10rem; font-weight: bold">CARGUE UN ARCHIVO Y PRESIONE EL BOTON
+                                VISUALIZAR</h5>
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    {% endblock %}
+
+    <script type="application/javascript">
+        $('input[type="file"]').change(function (e) {
+            var fileName = e.target.files[0].name;
+            $('.custom-file-label').html(fileName);
+        });
+
+        $("#buttonSeleccion1").click(function () {
+            $("button").removeClass("active");
+            $(this).addClass("active");
+        });
+        $("#buttonSeleccion2").click(function () {
+            $("button").removeClass("active");
+            $(this).addClass("active");
+            $.get('/downloadxml/');
+        });
+        $("#buttonSeleccion3").click(function () {
+            $("button").removeClass("active");
+            $(this).addClass("active");
+            $.get('/path/');
+        });
+        $("#buttonSeleccion4").click(function () {
+            $("button").removeClass("active");
+            $(this).addClass("active");
+            $.get('/createExcel/');
+        });
+
+        $("#buttonRecibido").click(function () {
+            $("#planeEmitido").css('color', '#000000');
+            $("#planeRecibido").css('color', '#df8f39');
+            $("#titulo").text("COMPROBANTES RECIBIDOS");
+            $.get('/recibidos/');
+        });
+        $("#buttonEmitido").click(function () {
+            $("#planeRecibido").css('color', '#000000');
+            $("#planeEmitido").css('color', '#df8f39');
+            $("#titulo").text("COMPROBANTES EMITIDOS");
+            $.get('/emitidos/');
+        });
+        
+
+    </script>
+
+</body>
+
+</html>

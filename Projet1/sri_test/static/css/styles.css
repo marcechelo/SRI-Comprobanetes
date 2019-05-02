@@ -1,0 +1,47 @@
+html,body
+{
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+    overflow-x: hidden; 
+}
+
+i:hover {
+    opacity: 0.6;
+  }
+  input {
+    display: none;
+  }
+  
+  .active {
+    background-color: #df8f39 !important;
+  }
+  
+  .buttonComprobantes{
+      background-color: #d9d9d9; 
+      border-style: none; 
+      width: 150px;
+      font-weight: bold;
+  }
+
+  #buttonSeleccion1, 
+  #buttonSeleccion2, 
+  #buttonSeleccion3,
+  #buttonSeleccion4 {
+    font-size: small;
+    width: 160px; 
+    background-color: #8b8b8b
+  }
+
+th, td{
+  font-size: small;
+}
+
+table {
+  border:0px;
+  border-collapse:collapse;
+  border-spacing:0px;
+  }
+
+
