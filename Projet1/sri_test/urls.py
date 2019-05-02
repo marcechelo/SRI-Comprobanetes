@@ -11,12 +11,10 @@ urlpatterns = [
     path('reload/', views.reload, name= 'reload'),
     path('downloadxml/', views.downloadxml, name= 'downloadxml'),
     path('downloadPdf/', views.downloadPdf, name= 'downloadPdf'),
+    path('downloadeExcel/', views.downloadeExcel, name = 'downloadeExcel'),
     path('emitidos/', views.comprobantesEmitidos, name= 'emitidos'),
     path('recibidos/', views.comprobantesRecibidos, name= 'recibidos'),
 
     path('read/', views.read_txt, name= 'read'),
     path('createPDF/', views.createPDF, name = 'createPDF'),
-    path('createExcel/', views.createExcel, name = 'createExcel'),
-
-    path('path/', views.selectPath, name = 'path'),
 ]

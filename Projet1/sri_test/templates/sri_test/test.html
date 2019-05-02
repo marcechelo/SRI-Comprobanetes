@@ -127,7 +127,7 @@
                                     <th scope="col">Fecha Autorizacion</th>
                                     <th scope="col">Tipo Emision</th>
                                     <th scope="col">Identificacion Receptor</th>
-                                    <th scope="col">Clave Acceso</th>
+                                    <!-- <th scope="col">Clave Acceso</th> --> 
                                     <th scope="col">Numero Autorizacion</th>
                                     <th scope="col">Imorte Total</th>
                                 </tr>
@@ -144,7 +144,7 @@
                                     <td>{{item.5}}</td>
                                     <td>{{item.6}}</td>
                                     <td>{{item.7}}</td>
-                                    <td>{{item.8}}</td>
+                                    <!-- <td>{{item.8}}</td> --> 
                                     <td>{{item.9}}</td>
                                     <td>{{item.10}}</td>
                                 </tr>
@@ -207,7 +207,21 @@
         $("#buttonSeleccion4").click(function () {
             $("button").removeClass("active");
             $(this).addClass("active");
-            $.get('/createExcel/');
+            $.get('/downloadeExcel/', function(data) {
+                if(data == 0){
+                    alert( "Debe seleccionar un archivo");
+                    $("#buttonSeleccion4").removeClass("active");
+
+                }
+                if(data == 2) {
+                    alert( "Debe seleccionar una carpeta de destino");
+                    $("#buttonSeleccion4").removeClass("active");
+                    
+                } 
+                if (data == 1) {
+                    alert( "Documentos Descargados correctamente");
+                }
+            });
         });
 
         $("#buttonRecibido").click(function () {

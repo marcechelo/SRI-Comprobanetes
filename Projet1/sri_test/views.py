@@ -672,342 +672,350 @@ def createPDF(request):
 
     return HttpResponse('DONE')
 
-def createExcel(request):
+def downloadeExcel(request):
 
-    workbook = xlsxwriter.Workbook('factura.xlsx') 
-    worksheet = workbook.add_worksheet() 
-    
-    #Formats
-    data_format = workbook.add_format({'text_wrap': True, 'font_size': 8, 'border': 1, 'valign': 'vcenter'})
-    titles_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter','font_size': 10, 'border': 1,})
-    merge_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter', 'font_size': 12, 'border': 1,})
-    
-    #Tamaños de las columnas
-    worksheet.set_column('B:C',20)
-    worksheet.set_column('D:D',20)
-    worksheet.set_column('E:E',15)
-    worksheet.set_column('G:G',30)
-    worksheet.set_column('H:J',30)
-    worksheet.set_column('K:K',20)
-    worksheet.set_column('L:L',30)
-    worksheet.set_column('M:M',20)
-    worksheet.set_column('N:N',10)
-    worksheet.set_column('O:O',30)
-    worksheet.set_column('P:AB',15)
-    worksheet.set_column('AC:AC',30)
-    worksheet.set_column('AD:AE',30)
+    global fileUploaded, dataDocumentArray
 
-    #Tipo de campos
-    worksheet.merge_range('A1:K1', 'Información Empresa', merge_format)
-    worksheet.merge_range('L1:AB1', 'Información Factura', merge_format)
-    worksheet.write('AC1', 'Información Adicional', merge_format)
-    worksheet.merge_range('AD1:AE1', 'Forma de Pago', merge_format)
-
-    #Capos descripcion
-    worksheet.write('A2', '#', titles_format) 
-    worksheet.write('B2', 'R.U.C', titles_format) 
-    worksheet.write('C2', 'No', titles_format) 
-    worksheet.write('D2', 'Fecha y Hora de Autorización', titles_format)
-    worksheet.write('E2', 'Ambiente', titles_format)
-    worksheet.write('F2', 'Emisión', titles_format)
-    worksheet.write('G2', 'Clave de Acceso', titles_format)
-    worksheet.write('H2', 'Nombre', titles_format)
-    worksheet.write('I2', 'Dirección Matriz', titles_format)
-    worksheet.write('J2', 'Dirección Sucursal', titles_format)
-    worksheet.write('K2', 'Obligado a Llevar', titles_format)
-    
-    worksheet.write('L2', 'Razón Social/Nombre', titles_format)
-    worksheet.write('M2', 'Identificación', titles_format)
-    worksheet.write('N2', 'Fecha', titles_format)
-    worksheet.write('O2', 'Dirección', titles_format)
-    worksheet.write('P2', 'Subtotal 12%', titles_format)
-    worksheet.write('Q2', 'Subtotal 0%', titles_format)
-    worksheet.write('R2', 'Subtotal No Objeto de I.V.A', titles_format)
-    worksheet.write('S2', 'Subtotal Exento I.V.A', titles_format)
-    worksheet.write('T2', 'Subtotal Sin Impuestos', titles_format)
-    worksheet.write('U2', 'Total Descuento', titles_format)
-    worksheet.write('V2', 'ICE', titles_format)
-    worksheet.write('W2', 'IVA 12%', titles_format)
-    worksheet.write('X2', 'IRBPNR', titles_format)
-    worksheet.write('Y2', 'Propina', titles_format)
-    worksheet.write('Z2', 'Valor Total', titles_format)
-    worksheet.write('AA2', 'Valor Total Sin Subsidio', titles_format)
-    worksheet.write('AB2', 'Ahorro por Subsidio', titles_format)
-
-    worksheet.write('AC2', 'Información Adicional', titles_format)
-
-    worksheet.write('AD2', 'Forma de Pago', titles_format)
-    worksheet.write('AE2', 'Valor', titles_format)
-
-    #Extraer datos
-
-    count = 2
-
-    for i in dataDocumentArray[1:]:
-        count += 1
-        worksheet.write('A'+str(count), count-2, data_format) 
-        # print("______________________________________")
-        # print(i[8])
-        headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
-        body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-        body += "    <Body>"
-        body += "       <autorizacionComprobante xmlns=\"http://ec.gob.sri.ws.autorizacion\">"
-        body += "           <claveAccesoComprobante xmlns=\"\">"+i[8]+"</claveAccesoComprobante>"
-        body += "       </autorizacionComprobante>"
-        body += "    </Body>"
-        body += "</Envelope>"
-        r = requests.post(url="https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl", data=body, headers=headers)
-        xml_response = r.text
-        #xml_response = xml_response.replace
-
-        ns = {'soap':'http://schemas.xmlsoap.org/soap/envelope/'}
-        ns2 = {'ns2': 'http://ec.gob.sri.ws.autorizacion'}
-        root = ElementTree.fromstring(xml_response)
-
-        numeroAutorizacion = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('numeroAutorizacion').text
-        worksheet.write('G'+str(count), numeroAutorizacion, data_format)
-
-        fechaAutorizacion = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('fechaAutorizacion').text
-        worksheet.write('D'+str(count), fechaAutorizacion, data_format)
+    if len(dataDocumentArray) != 0 :
         
-        ambiente = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('ambiente').text
-        worksheet.write('E'+str(count), ambiente, data_format)
-        
-        claveAccesoConsultada = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('claveAccesoConsultada').text
-        
-        value = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('comprobante')
-        
-        if value is not None:
+        root = tkinter.Tk()
+        dirname = filedialog.askdirectory(parent=root, initialdir="/", title='Please select a directory')
+        workbook = xlsxwriter.Workbook(dirname+'/factura.xlsx') 
+        worksheet = workbook.add_worksheet() 
+        print(dirname)
+        root.destroy()
+        if dirname != '':
 
-            text2 = value.text.replace("&lt;","<")
-            rootFactura = ElementTree.fromstring(text2)
-            detalles = rootFactura.find('detalles')
-            infoTributaria = rootFactura.find('infoTributaria')
-            infoFactura = rootFactura.find('infoFactura')
-            infoAdicional = rootFactura.find('infoAdicional')
-
-            if infoTributaria is not None:
-
-                if infoTributaria.find('tipoEmision') is not None:
-                    emisionNumero = int(infoTributaria.find('tipoEmision').text)
-                    if emisionNumero == 1:
-                        tipoEmision = 'NORMAL'
-                    else:
-                        tipoEmision = ''
-                else:
-                    tipoEmision = ''
-                worksheet.write('F'+str(count), tipoEmision, data_format)
-                
-
-                if infoTributaria.find('ruc') is not None:
-                    ruc = infoTributaria.find('ruc').text
-                else:
-                    ruc = ''
-                worksheet.write('B'+str(count), ruc, data_format) 
-
-                if infoTributaria.find('razonSocial') is not None:
-                    razonSocial = infoTributaria.find('razonSocial').text
-                else: 
-                    razonSocial = ''
-                worksheet.write('H'+str(count), razonSocial, data_format)
-                
-                if infoTributaria.find('dirMatriz') is not None:
-                    dirMatriz = infoTributaria.find('dirMatriz').text
-                else:
-                    dirMatriz = ''
-                worksheet.write('I'+str(count), dirMatriz, data_format)
-
-                if (infoTributaria.find('estab') is not None and
-                    infoTributaria.find('ptoEmi') is not None and
-                    infoTributaria.find('secuencial') is not None):
-                    estab = infoTributaria.find('estab').text
-                    ptoEmi = infoTributaria.find('ptoEmi').text
-                    secuencial = infoTributaria.find('secuencial').text
-                    No = estab + '-' + ptoEmi + '-' + secuencial 
-                else:
-                    No = ''  
-                worksheet.write('C'+str(count), No , data_format)    
-
-                if infoTributaria.find('nombreComercial') is not None:
-                    nombreComercial = infoTributaria.find('nombreComercial').text
-                else:
-                    nombreComercial = ''
+            #Formats
+            data_format = workbook.add_format({'text_wrap': True, 'font_size': 8, 'border': 1, 'valign': 'vcenter'})
+            titles_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter','font_size': 10, 'border': 1,})
+            merge_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter', 'font_size': 12, 'border': 1,})
             
-            if infoFactura is not None:
+            #Tamaños de las columnas
+            worksheet.set_column('B:C',20)
+            worksheet.set_column('D:D',20)
+            worksheet.set_column('E:E',15)
+            worksheet.set_column('G:G',30)
+            worksheet.set_column('H:J',30)
+            worksheet.set_column('K:K',20)
+            worksheet.set_column('L:L',30)
+            worksheet.set_column('M:M',20)
+            worksheet.set_column('N:N',10)
+            worksheet.set_column('O:O',30)
+            worksheet.set_column('P:AB',15)
+            worksheet.set_column('AC:AC',30)
+            worksheet.set_column('AD:AE',30)
 
-                if infoFactura.find('dirEstablecimiento') is not None:
-                    establecimiento = infoFactura.find('dirEstablecimiento').text
-                    if establecimiento != dirMatriz:
-                        dirEstablecimiento = infoFactura.find('dirEstablecimiento').text
-                    else:
-                        dirEstablecimiento = ''
-                else:
-                    dirEstablecimiento = ''
-                worksheet.write('J'+str(count), dirEstablecimiento, data_format)
+            #Tipo de campos
+            worksheet.merge_range('A1:K1', 'Información Empresa', merge_format)
+            worksheet.merge_range('L1:AB1', 'Información Factura', merge_format)
+            worksheet.write('AC1', 'Información Adicional', merge_format)
+            worksheet.merge_range('AD1:AE1', 'Forma de Pago', merge_format)
 
-                if infoFactura.find('direccionComprador') is not None: 
-                    direccionComprador = infoFactura.find('direccionComprador').text
-                else:
-                    direccionComprador = ''
-                worksheet.write('O'+str(count), direccionComprador, data_format)
-
-                if infoFactura.find('obligadoContabilidad') is not None: 
-                    obligadoContabilidad = infoFactura.find('obligadoContabilidad').text
-                else:
-                    obligadoContabilidad = ''
-                worksheet.write('K'+str(count), obligadoContabilidad, data_format)
-
-                if infoFactura.find('razonSocialComprador') is not None:
-                    razonSocialComprador = infoFactura.find('razonSocialComprador').text
-                else:
-                    razonSocialComprador = ''
-                worksheet.write('L'+str(count), razonSocialComprador, data_format)
-
-                if infoFactura.find('identificacionComprador') is not None: 
-                    identificacionComprador = infoFactura.find('identificacionComprador').text
-                else:
-                    identificacionComprador = ''
-                worksheet.write('M'+str(count), identificacionComprador, data_format)
-
-                if infoFactura.find('fechaEmision') is not None:
-                    fechaEmision = infoFactura.find('fechaEmision').text
-                else:
-                    fechaEmision = ''
-                worksheet.write('N'+str(count), fechaEmision, data_format)
-
-                if infoFactura.find('totalDescuento') is not None:
-                    totalDescuento = infoFactura.find('totalDescuento').text
-                else:
-                        totalDescuento = '0'
-                worksheet.write('U'+str(count), totalDescuento, data_format)
-
-                if infoFactura.find('pagos').find('pago').find('formaPago') is not None:
-                    formaPagoNumero = int(infoFactura.find('pagos').find('pago').find('formaPago').text)
-                    if formaPagoNumero == 1:
-                        formaPago = 'SIN UTILIZACION DEL SISTEMA FINANCIERO'
-                    elif formaPagoNumero == 15:
-                        formaPago = 'COMPENSACIÓN DE DEUDAS'
-                    elif formaPagoNumero == 16:
-                        formaPago = 'TARJETA DE DÉBITO'
-                    elif formaPagoNumero == 17:
-                        formaPago = 'DINERO ELECTRÓNICO'
-                    elif formaPagoNumero == 18:
-                        formaPago = 'TARJETA PREPAGO'
-                    elif formaPagoNumero == 19:
-                        formaPago = 'TARJETA DE CRÉDITO'
-                    elif formaPagoNumero == 20:
-                        formaPago = 'OTROS CON UTILIZACION DEL SISTEMA FINANCIERO'
-                    elif formaPagoNumero == 21:
-                        formaPago = 'ENDOSO DE TÍTULOS'
-                    else:
-                        formaPago = ''
-                else:
-                    formaPago = ''
-                worksheet.write('AD'+str(count), formaPago, data_format)
-
-                if infoFactura.find('pagos').find('pago').find('total') is not None:
-                    total = infoFactura.find('pagos').find('pago').find('total').text
-                else:
-                    total = '0' 
-                worksheet.write('AE'+str(count), total, data_format)
-
-                if infoFactura.find('totalSinImpuestos') is not None:
-                        totalSinImpuestos =  infoFactura.find('totalSinImpuestos').text
-                else:
-                    totalSinImpuestos = '0'
-                worksheet.write('T'+str(count), totalSinImpuestos, data_format)
-
-                if infoFactura.find('propina') is not None:
-                    propina = infoFactura.find('propina').text
-                else:
-                    propina = '0.00'
-                worksheet.write('Y'+str(count), propina, data_format)
-
-                if infoFactura.find('importeTotal') is not None:
-                    importeTotal = infoFactura.find('importeTotal').text
-                else:
-                    importeTotal = '0.00'
-                worksheet.write('Z'+str(count), importeTotal, data_format)
-
-                if infoFactura.find('totalSubsidio') is not None:
-                    totalSubsidio = infoFactura.find('totalSubsidio').text
-                else:
-                    totalSubsidio = '0.00'
-                worksheet.write('AB'+str(count), totalSubsidio, data_format)
-
-                valorSinSubsidio = float(importeTotal) - float(totalSubsidio)
-                worksheet.write('AA'+str(count), valorSinSubsidio, data_format)
-
-                if infoFactura.find('totalConImpuestos') is not None:
-                    countIce = 0
-                    countIRBPNR = 0
-                    for totalImpuesto in infoFactura.find('totalConImpuestos').findall('totalImpuesto'):
-                        if totalImpuesto.find('codigo') is not None:
-                            
-                            if int(totalImpuesto.find('codigo').text) == 2: 
-                                
-                                # iva 12%
-                                if int(totalImpuesto.find('codigoPorcentaje').text) == 2:    
-                                    iva =totalImpuesto.find('valor').text
-                                    subtotal_doce = totalImpuesto.find('baseImponible').text
-                                    worksheet.write('P'+str(count), subtotal_doce, data_format)
-                                    worksheet.write('W'+str(count), iva, data_format)
-                                else:
-                                    worksheet.write('P'+str(count), '0.00', data_format)
-                                    worksheet.write('W'+str(count), '0.00', data_format)
-                                
-                                # iva 0%
-                                if int(totalImpuesto.find('codigoPorcentaje').text) == 0:    
-                                    subtotal_cero = totalImpuesto.find('baseImponible').text
-                                    worksheet.write('Q'+str(count), subtotal_cero, data_format)
-                                else:
-                                    worksheet.write('Q'+str(count), '0.00', data_format)
-
-                                # no objeto de iva
-                                if int(totalImpuesto.find('codigoPorcentaje').text) == 6:
-                                     noObjetoIva = totalImpuesto.find('baseImponible').text
-                                     worksheet.write('R'+str(count), noObjetoIva, data_format)
-                                else:
-                                    worksheet.write('R'+str(count), '0.00', data_format)
-                                
-                                # exento de iva
-                                if int(totalImpuesto.find('codigoPorcentaje').text) == 7:
-                                     exentoIva = totalImpuesto.find('baseImponible').text
-                                     worksheet.write('S'+str(count), exentoIva, data_format)
-                                else:
-                                    worksheet.write('S'+str(count), '0.00', data_format)
-
-                            if (int(totalImpuesto.find('codigo').text) == 3 ):
-                                ice = totalImpuesto.find('valor').text
-                                worksheet.write('V'+str(count), ice, data_format)
-                                countIce +=1
-                            
-                            if int(totalImpuesto.find('codigo').text) == 5:
-                                IRBPNR = totalImpuesto.find('valor').text
-                                worksheet.write('X'+str(count), IRBPNR, data_format)
-                                countIRBPNR += 1
-                    
-                    if countIce == 0:
-                        worksheet.write('V'+str(count), '0.00', data_format)
-                    
-                    if countIRBPNR == 0:
-                        worksheet.write('X'+str(count), '0.00', data_format)
-
+            #Capos descripcion
+            worksheet.write('A2', '#', titles_format) 
+            worksheet.write('B2', 'R.U.C', titles_format) 
+            worksheet.write('C2', 'No', titles_format) 
+            worksheet.write('D2', 'Fecha y Hora de Autorización', titles_format)
+            worksheet.write('E2', 'Ambiente', titles_format)
+            worksheet.write('F2', 'Emisión', titles_format)
+            worksheet.write('G2', 'Clave de Acceso', titles_format)
+            worksheet.write('H2', 'Nombre', titles_format)
+            worksheet.write('I2', 'Dirección Matriz', titles_format)
+            worksheet.write('J2', 'Dirección Sucursal', titles_format)
+            worksheet.write('K2', 'Obligado a Llevar', titles_format)
             
-            if infoAdicional is not None:
-                adicional = ''
-                for campoAdicional in infoAdicional.findall('campoAdicional'):
-                    adicional += campoAdicional.get('nombre') + ':  ' + campoAdicional.text + '\n'
-            else:
-                adicional = ''
-            worksheet.write('AC'+str(count), adicional, data_format)
+            worksheet.write('L2', 'Razón Social/Nombre', titles_format)
+            worksheet.write('M2', 'Identificación', titles_format)
+            worksheet.write('N2', 'Fecha', titles_format)
+            worksheet.write('O2', 'Dirección', titles_format)
+            worksheet.write('P2', 'Subtotal 12%', titles_format)
+            worksheet.write('Q2', 'Subtotal 0%', titles_format)
+            worksheet.write('R2', 'Subtotal No Objeto de I.V.A', titles_format)
+            worksheet.write('S2', 'Subtotal Exento I.V.A', titles_format)
+            worksheet.write('T2', 'Subtotal Sin Impuestos', titles_format)
+            worksheet.write('U2', 'Total Descuento', titles_format)
+            worksheet.write('V2', 'ICE', titles_format)
+            worksheet.write('W2', 'IVA 12%', titles_format)
+            worksheet.write('X2', 'IRBPNR', titles_format)
+            worksheet.write('Y2', 'Propina', titles_format)
+            worksheet.write('Z2', 'Valor Total', titles_format)
+            worksheet.write('AA2', 'Valor Total Sin Subsidio', titles_format)
+            worksheet.write('AB2', 'Ahorro por Subsidio', titles_format)
 
-    workbook.close()
+            worksheet.write('AC2', 'Información Adicional', titles_format)
 
-    return HttpResponse('DONE')
+            worksheet.write('AD2', 'Forma de Pago', titles_format)
+            worksheet.write('AE2', 'Valor', titles_format)
 
-def selectPath(self):
-    root = tkinter.Tk()
-    dirname = filedialog.askdirectory(parent=root, initialdir="/", title='Please select a directory')
-    print(dirname)
-    return HttpResponse('DONE')
+            #Extraer datos
+
+            count = 2
+
+            for i in dataDocumentArray[1:]:
+                count += 1
+                worksheet.write('A'+str(count), count-2, data_format) 
+                # print("______________________________________")
+                # print(i[8])
+                headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
+                body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+                body += "    <Body>"
+                body += "       <autorizacionComprobante xmlns=\"http://ec.gob.sri.ws.autorizacion\">"
+                body += "           <claveAccesoComprobante xmlns=\"\">"+i[8]+"</claveAccesoComprobante>"
+                body += "       </autorizacionComprobante>"
+                body += "    </Body>"
+                body += "</Envelope>"
+                r = requests.post(url="https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl", data=body, headers=headers)
+                xml_response = r.text
+                #xml_response = xml_response.replace
+
+                ns = {'soap':'http://schemas.xmlsoap.org/soap/envelope/'}
+                ns2 = {'ns2': 'http://ec.gob.sri.ws.autorizacion'}
+                root = ElementTree.fromstring(xml_response)
+
+                numeroAutorizacion = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('numeroAutorizacion').text
+                worksheet.write('G'+str(count), numeroAutorizacion, data_format)
+
+                fechaAutorizacion = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('fechaAutorizacion').text
+                worksheet.write('D'+str(count), fechaAutorizacion, data_format)
+                
+                ambiente = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('ambiente').text
+                worksheet.write('E'+str(count), ambiente, data_format)
+                
+                claveAccesoConsultada = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('claveAccesoConsultada').text
+                
+                value = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('comprobante')
+                
+                if value is not None:
+
+                    text2 = value.text.replace("&lt;","<")
+                    rootFactura = ElementTree.fromstring(text2)
+                    detalles = rootFactura.find('detalles')
+                    infoTributaria = rootFactura.find('infoTributaria')
+                    infoFactura = rootFactura.find('infoFactura')
+                    infoAdicional = rootFactura.find('infoAdicional')
+
+                    if infoTributaria is not None:
+
+                        if infoTributaria.find('tipoEmision') is not None:
+                            emisionNumero = int(infoTributaria.find('tipoEmision').text)
+                            if emisionNumero == 1:
+                                tipoEmision = 'NORMAL'
+                            else:
+                                tipoEmision = ''
+                        else:
+                            tipoEmision = ''
+                        worksheet.write('F'+str(count), tipoEmision, data_format)
+                        
+
+                        if infoTributaria.find('ruc') is not None:
+                            ruc = infoTributaria.find('ruc').text
+                        else:
+                            ruc = ''
+                        worksheet.write('B'+str(count), ruc, data_format) 
+
+                        if infoTributaria.find('razonSocial') is not None:
+                            razonSocial = infoTributaria.find('razonSocial').text
+                        else: 
+                            razonSocial = ''
+                        worksheet.write('H'+str(count), razonSocial, data_format)
+                        
+                        if infoTributaria.find('dirMatriz') is not None:
+                            dirMatriz = infoTributaria.find('dirMatriz').text
+                        else:
+                            dirMatriz = ''
+                        worksheet.write('I'+str(count), dirMatriz, data_format)
+
+                        if (infoTributaria.find('estab') is not None and
+                            infoTributaria.find('ptoEmi') is not None and
+                            infoTributaria.find('secuencial') is not None):
+                            estab = infoTributaria.find('estab').text
+                            ptoEmi = infoTributaria.find('ptoEmi').text
+                            secuencial = infoTributaria.find('secuencial').text
+                            No = estab + '-' + ptoEmi + '-' + secuencial 
+                        else:
+                            No = ''  
+                        worksheet.write('C'+str(count), No , data_format)    
+
+                        if infoTributaria.find('nombreComercial') is not None:
+                            nombreComercial = infoTributaria.find('nombreComercial').text
+                        else:
+                            nombreComercial = ''
+                    
+                    if infoFactura is not None:
+
+                        if infoFactura.find('dirEstablecimiento') is not None:
+                            establecimiento = infoFactura.find('dirEstablecimiento').text
+                            if establecimiento != dirMatriz:
+                                dirEstablecimiento = infoFactura.find('dirEstablecimiento').text
+                            else:
+                                dirEstablecimiento = ''
+                        else:
+                            dirEstablecimiento = ''
+                        worksheet.write('J'+str(count), dirEstablecimiento, data_format)
+
+                        if infoFactura.find('direccionComprador') is not None: 
+                            direccionComprador = infoFactura.find('direccionComprador').text
+                        else:
+                            direccionComprador = ''
+                        worksheet.write('O'+str(count), direccionComprador, data_format)
+
+                        if infoFactura.find('obligadoContabilidad') is not None: 
+                            obligadoContabilidad = infoFactura.find('obligadoContabilidad').text
+                        else:
+                            obligadoContabilidad = ''
+                        worksheet.write('K'+str(count), obligadoContabilidad, data_format)
+
+                        if infoFactura.find('razonSocialComprador') is not None:
+                            razonSocialComprador = infoFactura.find('razonSocialComprador').text
+                        else:
+                            razonSocialComprador = ''
+                        worksheet.write('L'+str(count), razonSocialComprador, data_format)
+
+                        if infoFactura.find('identificacionComprador') is not None: 
+                            identificacionComprador = infoFactura.find('identificacionComprador').text
+                        else:
+                            identificacionComprador = ''
+                        worksheet.write('M'+str(count), identificacionComprador, data_format)
+
+                        if infoFactura.find('fechaEmision') is not None:
+                            fechaEmision = infoFactura.find('fechaEmision').text
+                        else:
+                            fechaEmision = ''
+                        worksheet.write('N'+str(count), fechaEmision, data_format)
+
+                        if infoFactura.find('totalDescuento') is not None:
+                            totalDescuento = infoFactura.find('totalDescuento').text
+                        else:
+                                totalDescuento = '0'
+                        worksheet.write('U'+str(count), totalDescuento, data_format)
+
+                        if infoFactura.find('pagos').find('pago').find('formaPago') is not None:
+                            formaPagoNumero = int(infoFactura.find('pagos').find('pago').find('formaPago').text)
+                            if formaPagoNumero == 1:
+                                formaPago = 'SIN UTILIZACION DEL SISTEMA FINANCIERO'
+                            elif formaPagoNumero == 15:
+                                formaPago = 'COMPENSACIÓN DE DEUDAS'
+                            elif formaPagoNumero == 16:
+                                formaPago = 'TARJETA DE DÉBITO'
+                            elif formaPagoNumero == 17:
+                                formaPago = 'DINERO ELECTRÓNICO'
+                            elif formaPagoNumero == 18:
+                                formaPago = 'TARJETA PREPAGO'
+                            elif formaPagoNumero == 19:
+                                formaPago = 'TARJETA DE CRÉDITO'
+                            elif formaPagoNumero == 20:
+                                formaPago = 'OTROS CON UTILIZACION DEL SISTEMA FINANCIERO'
+                            elif formaPagoNumero == 21:
+                                formaPago = 'ENDOSO DE TÍTULOS'
+                            else:
+                                formaPago = ''
+                        else:
+                            formaPago = ''
+                        worksheet.write('AD'+str(count), formaPago, data_format)
+
+                        if infoFactura.find('pagos').find('pago').find('total') is not None:
+                            total = infoFactura.find('pagos').find('pago').find('total').text
+                        else:
+                            total = '0' 
+                        worksheet.write('AE'+str(count), total, data_format)
+
+                        if infoFactura.find('totalSinImpuestos') is not None:
+                                totalSinImpuestos =  infoFactura.find('totalSinImpuestos').text
+                        else:
+                            totalSinImpuestos = '0'
+                        worksheet.write('T'+str(count), totalSinImpuestos, data_format)
+
+                        if infoFactura.find('propina') is not None:
+                            propina = infoFactura.find('propina').text
+                        else:
+                            propina = '0.00'
+                        worksheet.write('Y'+str(count), propina, data_format)
+
+                        if infoFactura.find('importeTotal') is not None:
+                            importeTotal = infoFactura.find('importeTotal').text
+                        else:
+                            importeTotal = '0.00'
+                        worksheet.write('Z'+str(count), importeTotal, data_format)
+
+                        if infoFactura.find('totalSubsidio') is not None:
+                            totalSubsidio = infoFactura.find('totalSubsidio').text
+                        else:
+                            totalSubsidio = '0.00'
+                        worksheet.write('AB'+str(count), totalSubsidio, data_format)
+
+                        valorSinSubsidio = float(importeTotal) - float(totalSubsidio)
+                        worksheet.write('AA'+str(count), valorSinSubsidio, data_format)
+
+                        if infoFactura.find('totalConImpuestos') is not None:
+                            countIce = 0
+                            countIRBPNR = 0
+                            for totalImpuesto in infoFactura.find('totalConImpuestos').findall('totalImpuesto'):
+                                if totalImpuesto.find('codigo') is not None:
+                                    
+                                    if int(totalImpuesto.find('codigo').text) == 2: 
+                                        
+                                        # iva 12%
+                                        if int(totalImpuesto.find('codigoPorcentaje').text) == 2:    
+                                            iva =totalImpuesto.find('valor').text
+                                            subtotal_doce = totalImpuesto.find('baseImponible').text
+                                            worksheet.write('P'+str(count), subtotal_doce, data_format)
+                                            worksheet.write('W'+str(count), iva, data_format)
+                                        else:
+                                            worksheet.write('P'+str(count), '0.00', data_format)
+                                            worksheet.write('W'+str(count), '0.00', data_format)
+                                        
+                                        # iva 0%
+                                        if int(totalImpuesto.find('codigoPorcentaje').text) == 0:    
+                                            subtotal_cero = totalImpuesto.find('baseImponible').text
+                                            worksheet.write('Q'+str(count), subtotal_cero, data_format)
+                                        else:
+                                            worksheet.write('Q'+str(count), '0.00', data_format)
+
+                                        # no objeto de iva
+                                        if int(totalImpuesto.find('codigoPorcentaje').text) == 6:
+                                            noObjetoIva = totalImpuesto.find('baseImponible').text
+                                            worksheet.write('R'+str(count), noObjetoIva, data_format)
+                                        else:
+                                            worksheet.write('R'+str(count), '0.00', data_format)
+                                        
+                                        # exento de iva
+                                        if int(totalImpuesto.find('codigoPorcentaje').text) == 7:
+                                            exentoIva = totalImpuesto.find('baseImponible').text
+                                            worksheet.write('S'+str(count), exentoIva, data_format)
+                                        else:
+                                            worksheet.write('S'+str(count), '0.00', data_format)
+
+                                    if (int(totalImpuesto.find('codigo').text) == 3 ):
+                                        ice = totalImpuesto.find('valor').text
+                                        worksheet.write('V'+str(count), ice, data_format)
+                                        countIce +=1
+                                    
+                                    if int(totalImpuesto.find('codigo').text) == 5:
+                                        IRBPNR = totalImpuesto.find('valor').text
+                                        worksheet.write('X'+str(count), IRBPNR, data_format)
+                                        countIRBPNR += 1
+                            
+                            if countIce == 0:
+                                worksheet.write('V'+str(count), '0.00', data_format)
+                            
+                            if countIRBPNR == 0:
+                                worksheet.write('X'+str(count), '0.00', data_format)
+
+                    
+                    if infoAdicional is not None:
+                        adicional = ''
+                        for campoAdicional in infoAdicional.findall('campoAdicional'):
+                            adicional += campoAdicional.get('nombre') + ':  ' + campoAdicional.text + '\n'
+                    else:
+                        adicional = ''
+                    worksheet.write('AC'+str(count), adicional, data_format)
+
+            workbook.close()
+
+            return HttpResponse(1)
+        
+        else:
+            return HttpResponse(2)
+    else:
+        return HttpResponse(0)
