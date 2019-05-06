@@ -213,7 +213,22 @@
         $("#buttonSeleccion3").click(function () {
             $("button").removeClass("active");
             $(this).addClass("active");
-            $.get('/createPDF/');
+            $.get('/downloadPdf/', function(data) {
+                if(data == 0){
+                    alert( "Debe seleccionar un archivo");
+                    $("#buttonSeleccion3").removeClass("active");
+
+                }
+                if(data == 2) {
+                    alert( "Debe seleccionar una carpeta de destino");
+                    $("#buttonSeleccion3").removeClass("active");
+                    
+                } 
+                if (data == 1) {
+                    alert( "Documentos PDF descargados correctamente");
+                    $("#buttonSeleccion3").removeClass("active");
+                }
+            });
         });
         $("#buttonSeleccion4").click(function () {
             $("button").removeClass("active");
