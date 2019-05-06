@@ -464,7 +464,7 @@ def downloadPdf(request):
                                     float(totalImpuesto.find('valor').text) == 0):
                                     exentoIva += ' ' + totalImpuesto.find('baseImponible').text
                                     countruc += 1
-                                    print(str(count) + ' '+ exentoIva)
+                                    #print(str(count) + ' '+ exentoIva)
                                 
 
                                 if (int(totalImpuesto.find('codigo').text) == 3 and
@@ -479,24 +479,55 @@ def downloadPdf(request):
                         detalleAd = ''
 
                         if child.find('detallesAdicionales') is not None:
-                            for child2 in child.find('detallesAdicionales'):
-                                if child2.find('detAdicional') is not None:
-                                    detAdicional = child2.find('detAdicional').text
-                                    detalleAd += detAdicional + '\n'
+                            for child2 in child.find('detallesAdicionales').findall('detAdicional'):
+                                if child2 is not None:
+                                    nombre = child2.get('nombre')
+                                    valor = child2.get('valor=')
+                                    detalleAd += str(nombre) + ':   '+ str(valor) +'\n'
                                 
                         #print(detalleAd)
 
-                        if (child.find('codigoPrincipal') is not None and 
-                            child.find('cantidad') is not None and
-                            child.find('precioUnitario') is not None and
-                            child.find('descripcion') is not None):
-                            
-                            precioUnitario = child.find('precioUnitario').text
-                            cantidad = child.find('cantidad').text
+                        if child.find('codigoPrincipal') is not None:
                             codigoPrincipal = child.find('codigoPrincipal').text
-                            descripcion = child.find('descripcion').text
+                        else:
+                            codigoPrincipal = ''
                         
-                        #print(descripcion)
+                        if child.find('codigoAuxiliar') is not None:
+                            codigoAuxiliar = child.find('codigoAuxiliar').text
+                        else:
+                            codigoAuxiliar = ''
+                        
+                        if child.find('descuento') is not None:
+                            descuento = child.find('descuento').text
+                        else:
+                            descuento = ''
+
+                        if child.find('cantidad') is not None:
+                            cantidad = child.find('cantidad').text
+                        else:
+                            cantidad = '0'
+
+                        if child.find('precioUnitario') is not None:
+                            precioUnitario = child.find('precioUnitario').text
+                        else:
+                            precioUnitario = '0.00'
+
+                        if child.find('descripcion') is not None:
+                            descripcion = child.find('descripcion').text
+                        else:
+                            descripcion = ''
+                        
+                        if child.find('precioTotalSinImpuesto') is not None:
+                            precioTotalSinImpuesto = child.find('precioTotalSinImpuesto').text
+                        else:
+                            precioTotalSinImpuesto = '0.00'
+                            
+                        if child.find('precioSinSubsidio') is not None:
+                            precioSinSubsidio = child.find('precioSinSubsidio').text
+                        else:
+                            precioSinSubsidio = '0.00'
+                        
+                        subsidio = float(precioSinSubsidio) - float(precioTotalSinImpuesto)
                 
                 if infoAdicional is not None:
                     adicional = ''
@@ -653,24 +684,61 @@ def createPDF(request):
     
     size = A4
     print (A4[0])
-    print(size[1]*mm)
+    #print(size[1]*mm)
 
 
-    data = [[p, p1, p2, p3, p4, p5, p6,p7,p8, p9], [2, 1, 3,4,5,6,7,8,9,0], [3, 2, 1,4,5,6,7,8,9]]
+    data = [[p, p1, p2, p3, p4, p5, p6,p7,p8, p9]]
 
-    table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+    # añadir datos = data.append([10,11,12,13,14,15,16,17,18,19])
+    # quitar datos = data.remove(data[0])
+
+    
+    
+
+    #table.wrapOn(c, size[0], size[1])
+    #table.drawOn(c, (0.2)*inch, (4.47)*inch)
+    h = 0
+    contador = 0
+
+    while h < 390:
+        table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+        contador += 1
+        data.append([10,11,12,13,14,15,16,17,18,contador])
+        table.canv = c
+        w, h = table.wrap(0,0)
+
+
     table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                    ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-                    ('BOX', (0,0), (-1,-1), 0.25, colors.black)])
-
+                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
     table.wrapOn(c, size[0], size[1])
-    table.drawOn(c, (0.2)*inch, (4.5)*inch)
 
-    table.canv = c
-    w, h = table.wrap(0,0)
+    table.drawOn(c, (0.2)*inch, (0.0)*inch)
 
-    print(h)
+    #print(h*inch)
+    #print(h*mm)
+    #print(h)
+
+    c.showPage()
+    c.translate(0,(0.7)*inch)
+
+    contador2 = 0
+    while h < 750:
+        table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+        contador2 += 1
+        data.append([10,11,12,13,14,15,16,17,18,contador2])
+        table.canv = c
+        w, h = table.wrap(0,0)
+
+
+    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+    table.wrapOn(c, size[0], size[1])
+
+    table.drawOn(c, (0.2)*inch, (0.0)*inch)
     
     c.save()
 
