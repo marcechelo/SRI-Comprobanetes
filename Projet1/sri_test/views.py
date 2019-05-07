@@ -538,10 +538,47 @@ def downloadPdf(request):
                             if countIRBPNR == 0:
                                 IRBPNR = '0.00'
 
-                    
+                    #Eestilos para los párrafos que usaran en la tabla
+
+                    #Paragraph style
+                    style1 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 10 )
+                    style2 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 8 )
+                    style3 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 7, alignment = TA_CENTER, )
+                    style4 = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 8 )
+
                     if detalles is not None:
+                        
+                        detalleArray = []
+                        contadorDetalles = 0
+                        
                         for child in detalles.findall('detalle'):
+                            contadorDetalles += 1
                             detalleAd = ''
+                            detallesArray = []
+
+                            if child.find('codigoPrincipal') is not None:
+                                codigoPrincipal = child.find('codigoPrincipal').text
+                            else:
+                                codigoPrincipal = ''
+                            detalle1 = Paragraph(codigoPrincipal, style4)
+
+                            if child.find('codigoAuxiliar') is not None:
+                                codigoAuxiliar = child.find('codigoAuxiliar').text
+                            else:
+                                codigoAuxiliar = ''
+                            detalle2 = Paragraph(codigoAuxiliar, style4)
+
+                            if child.find('cantidad') is not None:
+                                cantidad = child.find('cantidad').text
+                            else:
+                                cantidad = '0'
+                            detalle3 = Paragraph(cantidad, style4)
+
+                            if child.find('descripcion') is not None:
+                                descripcion = child.find('descripcion').text
+                            else:
+                                descripcion = ''
+                            detalle4 = Paragraph(descripcion, style4)
 
                             if child.find('detallesAdicionales') is not None:
                                 for child2 in child.find('detallesAdicionales').findall('detAdicional'):
@@ -549,50 +586,50 @@ def downloadPdf(request):
                                         nombre = child2.get('nombre')
                                         valor = child2.get('valor=')
                                         detalleAd += str(nombre) + ':   '+ str(valor) +'\n'
-                                    
-                            #print(detalleAd)
-
-                            if child.find('codigoPrincipal') is not None:
-                                codigoPrincipal = child.find('codigoPrincipal').text
-                            else:
-                                codigoPrincipal = ''
                             
-                            if child.find('codigoAuxiliar') is not None:
-                                codigoAuxiliar = child.find('codigoAuxiliar').text
-                            else:
-                                codigoAuxiliar = ''
-                            
-                            if child.find('descuento') is not None:
-                                descuento = child.find('descuento').text
-                            else:
-                                descuento = ''
-
-                            if child.find('cantidad') is not None:
-                                cantidad = child.find('cantidad').text
-                            else:
-                                cantidad = '0'
+                            detalle5 = Paragraph(detalleAd, style4)
 
                             if child.find('precioUnitario') is not None:
                                 precioUnitario = child.find('precioUnitario').text
                             else:
                                 precioUnitario = '0.00'
+                            detalle6 = Paragraph(precioUnitario, style4) 
 
-                            if child.find('descripcion') is not None:
-                                descripcion = child.find('descripcion').text
+                            if child.find('precioSinSubsidio') is not None:
+                                precioSinSubsidio = child.find('precioSinSubsidio').text
                             else:
-                                descripcion = ''
+                                precioSinSubsidio = '0.00' 
+                            detalle8 = Paragraph(precioSinSubsidio, style4)
+
+                            if float(precioSinSubsidio) == 0.00:
+                                subsidio = '0.00'
+                            else:
+                                subsidio = float(precioSinSubsidio) - float(precioTotalSinImpuesto)  
+                            detalle7 = Paragraph(subsidio, style4)                         
                             
+                            if child.find('descuento') is not None:
+                                descuento = child.find('descuento').text
+                            else:
+                                descuento = ''
+                            detalle9 = Paragraph(descuento, style4)
+
                             if child.find('precioTotalSinImpuesto') is not None:
                                 precioTotalSinImpuesto = child.find('precioTotalSinImpuesto').text
                             else:
                                 precioTotalSinImpuesto = '0.00'
-                                
-                            if child.find('precioSinSubsidio') is not None:
-                                precioSinSubsidio = child.find('precioSinSubsidio').text
-                            else:
-                                precioSinSubsidio = '0.00'
-                            
-                            subsidio = float(precioSinSubsidio) - float(precioTotalSinImpuesto)
+                            detalle10 = Paragraph(precioTotalSinImpuesto, style4)
+
+                            detallesArray.append(detalle1)
+                            detallesArray.append(detalle2)
+                            detallesArray.append(detalle3)
+                            detallesArray.append(detalle4)
+                            detallesArray.append(detalle5)
+                            detallesArray.append(detalle6)
+                            detallesArray.append(detalle7)
+                            detallesArray.append(detalle8)
+                            detallesArray.append(detalle9)
+                            detallesArray.append(detalle10)
+                            detalleArray.append(detallesArray)
                     
                     if infoAdicional is not None:
                         adicional = ''
@@ -612,12 +649,6 @@ def downloadPdf(request):
                 c.roundRect(4*inch, (6.5)*inch, 287, 300, 4)
                 c.roundRect((0.2)*inch, (6.5)*inch, 260, 200, 4)
                 c.rect((0.2)*inch, (5.4)*inch, 560, 75)
-
-                #Paragraph style
-                style1 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 10 )
-                style2 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 8 )
-                style3 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 7, alignment = TA_CENTER, )
-                style4 = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 8 )
 
                 c.setFont("Helvetica", 8)
                 c.setFillColorRGB(255,0,0)
@@ -714,11 +745,102 @@ def downloadPdf(request):
                 message = 'Dirección                       '+ direccionComprador
                 c.drawString((0.3)*inch, (5.7)*inch, message)
 
+                # CREACION DE LA TABLA CON LOS PRODUCTOS
+
+                #Campos de titulo
+                p = Paragraph('Cod. Principal', style3)
+                p1 = Paragraph('Cod. Auxiliar', style3)
+                p2 = Paragraph('Cantidad', style3)
+                p3 = Paragraph('Descripción', style3)
+                p4 = Paragraph('Detalle Adicional', style3)
+                p5 = Paragraph('Precio Unitario', style3)
+                p6 = Paragraph('Subsidio', style3)
+                p7 = Paragraph('Precio sin Subsidio', style3)
+                p8 = Paragraph('Descuento', style3)
+                p9 = Paragraph('Precio Total', style3)
+                data = [[p, p1, p2, p3, p4, p5, p6,p7,p8, p9]]
+
+                size = A4
+                h = 0
+                pagina = 0
+
+                #Iteración del arreglo de datos para llenar la tabla
+                for index, item in enumerate(detalleArray):
+                    data.append(item)
+                    table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+                    table.canv = c
+                    w, h = table.wrap(0,0)
+
+                    #Primera hoja del pdf
+                    if (h > 390 and pagina == 0 and index != 0 ):
+                        pagina += 1
+                        auxiliar = data
+                        auxiliar.pop()
+
+                        table = Table(auxiliar, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+                        table.canv = c
+                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                        table.canv = c
+                        w, h = table.wrap(0,0)
+                        table.wrapOn(c, size[0], size[1])
+                        table.drawOn(c, (0.2)*inch, (390-h))
+
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        data = []
+                        data.append(item)
+
+                    # 2,3 ... hojas del pdf
+                    if (h > 750):
+                        auxiliar = data
+                        auxiliar.pop()
+
+                        table = Table(auxiliar, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+                        table.canv = c
+                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                        table.canv = c
+                        w, h = table.wrap(0,0)
+                        table.wrapOn(c, size[0], size[1])
+                        table.drawOn(c, (0.2)*inch, (750-h))
+
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        data = []
+                        data.append(item)
+
+                #Crea la tabla cuando alcanza en la primera hoja del pdf
+                if (h <= 390 and pagina == 0):
+                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                    table.wrapOn(c, size[0], size[1])
+                    table.drawOn(c, (0.2)*inch, (390-h))
+                
+                #Crea la tabla en las demas hojas del pdf
+                if(h <= 750 and pagina != 0):
+                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                    table.wrapOn(c, size[0], size[1])
+                    table.drawOn(c, (0.2)*inch, (750-h))
+                
+                # CREACION DE LA TABLA CON LA INFORMACION ADICIONAL
+
+                
+
                 c.save()
 
             return HttpResponse(1)
         else:
-            HttpResponse(2)
+            return HttpResponse(2)
     
     else:
         return HttpResponse(0)
@@ -862,13 +984,10 @@ def createPDF(request):
     p7 = Paragraph('Precio sin Subsidio', style3)
     p8 = Paragraph('Descuento', style3)
     p9 = Paragraph('Precio Total', style3)
-    
+    data = [[p, p1, p2, p3, p4, p5, p6,p7,p8, p9]]
+
     size = A4
     print (A4[0])
-    #print(size[1]*mm)
-
-
-    data = [[p, p1, p2, p3, p4, p5, p6,p7,p8, p9]]
 
     # añadir datos = data.append([10,11,12,13,14,15,16,17,18,19])
     # quitar datos = data.remove(data[0])
