@@ -634,7 +634,7 @@ def downloadPdf(request):
                     if infoAdicional is not None:
                         adicional = ''
                         for campoAdicional in infoAdicional.findall('campoAdicional'):
-                            adicional += campoAdicional.get('nombre') + ':  ' + campoAdicional.text + '\n'
+                            adicional += campoAdicional.get('nombre') + ':  ' + campoAdicional.text + '<br />\n'
                     else:
                         adicional = ''
 
@@ -822,6 +822,25 @@ def downloadPdf(request):
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (390-h))
+
+                    p = Paragraph('Información Adicional', style3)
+                    p1 = Paragraph(adicional, style4)
+                    infoAdicionalArray = [[p], [p1]]
+                    table = Table(infoAdicionalArray, colWidths=[300])
+                    table.canv = c
+                    w, height = table.wrap(0,0)
+                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                    table.wrapOn(c, size[0], size[1])
+                    if height > (385-h):
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        table.drawOn(c, (0.2)*inch, (750-height))
+                    else:
+                        table.drawOn(c, (0.2)*inch, (385-h-height))
+
                 
                 #Crea la tabla en las demas hojas del pdf
                 if(h <= 750 and pagina != 0):
@@ -831,10 +850,25 @@ def downloadPdf(request):
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (750-h))
-                
-                # CREACION DE LA TABLA CON LA INFORMACION ADICIONAL
 
-                
+                    p = Paragraph('Información Adicional', style3)
+                    p1 = Paragraph(adicional, style4)
+                    infoAdicionalArray = [[p], [p1]]
+                    table = Table(infoAdicionalArray, colWidths=[300])
+                    table.canv = c
+                    w, height = table.wrap(0,0)
+                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                    table.wrapOn(c, size[0], size[1])
+                    if height > (745-h):
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        table.drawOn(c, (0.2)*inch, (750-height))
+                    else:
+                        table.drawOn(c, (0.2)*inch, (745-h-height))
+
 
                 c.save()
 
