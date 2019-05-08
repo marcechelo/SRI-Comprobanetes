@@ -842,7 +842,27 @@ def downloadPdf(request):
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
                 tablePago.wrapOn(c, size[0], size[1])
 
-                #Dibuja la tabla cuando alcanza en la primera hoja del pdf
+                #Datos para la tabla de totales 
+                arregloTotales = [['SUBTOTAL 12%', subtotal_doce], 
+                                ['SUBTOTAL 0%', subtotal_cero], 
+                                ['SUBTOTAL NO OBJETO DE IVA', noObjetoIva], 
+                                ['SUBTOTAL EXENTO DE IVA', exentoIva],
+                                ['SUBTOTAL SIN IMPUESTOS', totalSinImpuestos],
+                                ['TOTAL DESCUENTO', totalDescuento],
+                                ['ICE', ice],
+                                ['IVA 12%', iva],
+                                ['IRBPNR', IRBPNR],
+                                ['PROPINA', propina],
+                                ['VALOR TOTAL', importeTotal]]
+
+                table = Table(arregloTotales, colWidths=[150, 50])
+                table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                table.wrapOn(c, size[0], size[1])
+
+                #Dibuja las tablas cuando alcanza en la primera hoja del pdf
                 if (h <= 390 and pagina == 0):
                     table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
@@ -850,7 +870,7 @@ def downloadPdf(request):
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (390-h))
-                    
+
                     #Comprueba si entra en la página o crea una nueva página 
                     if height > (385-h):
                         c.showPage()
@@ -877,7 +897,7 @@ def downloadPdf(request):
                             tablePago.drawOn(c, (0.2)*inch, (380-h-height-height1))
                     
 
-                #Dibuja la tabla en las demas hojas del pdf
+                #Dibuja las tablas en las demas hojas del pdf
                 if(h <= 750 and pagina != 0):
                     table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
@@ -910,20 +930,6 @@ def downloadPdf(request):
                             tablePago.drawOn(c, (0.2)*inch, (750-height1))
                         else:
                             tablePago.drawOn(c, (0.2)*inch, (740-h-height-height1))
-
-                    #Crea la tabla con los valores totales de la factura
-
-                    arregloTotales = ['SUBTOTAL 12%', 
-                                      'SUBTOTAL 0%', 
-                                      'SUBTOTAL NO OBJETO DE IVA', 
-                                      'SUBTOTAL EXENTO DE IVA',
-                                      'SUBTOTAL SIN IMPUESTOS',
-                                      'TOTAL DESCUENTO',
-                                      'ICE',
-                                      'IVA 12%',
-                                      'IRBPNR',
-                                      'PROPINA',
-                                      'VALOR TOTAL']
 
                 c.save()
 
