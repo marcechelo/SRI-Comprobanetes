@@ -814,7 +814,35 @@ def downloadPdf(request):
                         data = []
                         data.append(item)
 
-                #Crea la tabla cuando alcanza en la primera hoja del pdf
+                #Crea la tabla de información adicional
+                p = Paragraph('Información Adicional', style3)
+                p1 = Paragraph(adicional, style4)
+                infoAdicionalArray = [[p], [p1]]
+                tableAdicional = Table(infoAdicionalArray, colWidths=[300])
+                tableAdicional.canv = c
+                w, height = tableAdicional.wrap(0,0)
+                tableAdicional.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                tableAdicional.wrapOn(c, size[0], size[1])
+
+                #Crea la tabla de forma de pago
+                p = Paragraph('Forma de Pago', style3)
+                p1 = Paragraph('Valor', style3)
+                p2 = Paragraph(formaPago, style4)
+                p3 = Paragraph(total, style4)
+                formaPagoArray = [[p, p1], [p2, p3]]
+                tablePago = Table(formaPagoArray, colWidths=[150, 75])
+                tablePago.canv = c
+                w, height1 = tablePago.wrap(0,0)
+                tablePago.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                tablePago.wrapOn(c, size[0], size[1])
+
+                #Dibuja la tabla cuando alcanza en la primera hoja del pdf
                 if (h <= 390 and pagina == 0):
                     table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
@@ -822,75 +850,34 @@ def downloadPdf(request):
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (390-h))
-
-                    #Crea la tabla de información adicional
-                    p = Paragraph('Información Adicional', style3)
-                    p1 = Paragraph(adicional, style4)
-                    infoAdicionalArray = [[p], [p1]]
-                    table = Table(infoAdicionalArray, colWidths=[300])
-                    table.canv = c
-                    w, height = table.wrap(0,0)
-                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                    table.wrapOn(c, size[0], size[1])
                     
                     #Comprueba si entra en la página o crea una nueva página 
                     if height > (385-h):
                         c.showPage()
                         c.translate(0,(0.7)*inch)
-                        table.drawOn(c, (0.2)*inch, (750-height))
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-height))
 
-                        #Crea la tabla de forma de pago
-                        p = Paragraph('Forma de Pago', style3)
-                        p1 = Paragraph('Valor', style3)
-                        p2 = Paragraph(formaPago, style4)
-                        p3 = Paragraph(total, style4)
-                        formaPagoArray = [[p, p1], [p2, p3]]
-                        table = Table(formaPagoArray, colWidths=[150, 75])
-                        table.canv = c
-                        w, height1 = table.wrap(0,0)
-                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                            ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                            ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                        table.wrapOn(c, size[0], size[1])
-
+                        #Dibuja la tabla de forma de pago
                         if (height1 > (745-height)):
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            table.drawOn(c, (0.2)*inch, (750-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (750-height1))
                         else:
-                            table.drawOn(c, (0.2)*inch, (745-height-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (745-height-height1))
 
                     else:
-                        table.drawOn(c, (0.2)*inch, (385-h-height))
-                        
-                        #Crea la tabla de forma de pago
-                        p = Paragraph('Forma de Pago', style3)
-                        p1 = Paragraph('Valor', style3)
-                        p2 = Paragraph(formaPago, style4)
-                        p3 = Paragraph(total, style4)
-                        formaPagoArray = [[p, p1], [p2, p3]]
-                        table = Table(formaPagoArray, colWidths=[150, 75])
-                        table.canv = c
-                        w, height1 = table.wrap(0,0)
-                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                            ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                            ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                        table.wrapOn(c, size[0], size[1])
+                        tableAdicional.drawOn(c, (0.2)*inch, (385-h-height))
 
+                        #Dibuja la tabla de forma de pago
                         if (height1 > (380-h-height)):
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            table.drawOn(c, (0.2)*inch, (750-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (750-height1))
                         else:
-                            table.drawOn(c, (0.2)*inch, (380-h-height-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (380-h-height-height1))
                     
 
-                #Crea la tabla en las demas hojas del pdf
+                #Dibuja la tabla en las demas hojas del pdf
                 if(h <= 750 and pagina != 0):
                     table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
@@ -899,71 +886,30 @@ def downloadPdf(request):
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (750-h))
 
-                    #Crea la tabla de información adicional
-                    p = Paragraph('Información Adicional', style3)
-                    p1 = Paragraph(adicional, style4)
-                    infoAdicionalArray = [[p], [p1]]
-                    table = Table(infoAdicionalArray, colWidths=[300])
-                    table.canv = c
-                    w, height = table.wrap(0,0)
-                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                    table.wrapOn(c, size[0], size[1])
-
                     #Comprueba si entra en la página o crea una nueva página 
                     if height > (745-h):
                         c.showPage()
                         c.translate(0,(0.7)*inch)
-                        table.drawOn(c, (0.2)*inch, (750-height))
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-height))
 
-                        #Crea la tabla de forma de pago
-                        p = Paragraph('Forma de Pago', style3)
-                        p1 = Paragraph('Valor', style3)
-                        p2 = Paragraph(formaPago, style4)
-                        p3 = Paragraph(total, style4)
-                        formaPagoArray = [[p, p1], [p2, p3]]
-                        table = Table(formaPagoArray, colWidths=[150, 75])
-                        table.canv = c
-                        w, height1 = table.wrap(0,0)
-                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                            ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                            ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                        table.wrapOn(c, size[0], size[1])
-
+                        #Bibuja la tabla de forma de pago
                         if (height1 > (745-height)):
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            table.drawOn(c, (0.2)*inch, (750-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (750-height1))
                         else:
-                            table.drawOn(c, (0.2)*inch, (745-height-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (745-height-height1))
 
                     else:
-                        table.drawOn(c, (0.2)*inch, (745-h-height))
+                        tableAdicional.drawOn(c, (0.2)*inch, (745-h-height))
 
-                        #Crea la tabla de forma de pago
-                        p = Paragraph('Forma de Pago', style3)
-                        p1 = Paragraph('Valor', style3)
-                        p2 = Paragraph(formaPago, style4)
-                        p3 = Paragraph(total, style4)
-                        formaPagoArray = [[p, p1], [p2, p3]]
-                        table = Table(formaPagoArray, colWidths=[150, 75])
-                        table.canv = c
-                        w, height1 = table.wrap(0,0)
-                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                            ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                            ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                        table.wrapOn(c, size[0], size[1])
-
+                        #Bibuja la tabla de forma de pago
                         if (height1 > (740-h-height)):
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            table.drawOn(c, (0.2)*inch, (750-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (750-height1))
                         else:
-                            table.drawOn(c, (0.2)*inch, (740-h-height-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (740-h-height-height1))
 
                     #Crea la tabla con los valores totales de la factura
 
