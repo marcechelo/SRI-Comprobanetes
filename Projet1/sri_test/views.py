@@ -14,7 +14,7 @@ from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 from tkinter import filedialog
 import tkinter
@@ -501,7 +501,8 @@ def downloadPdf(request):
                                         # iva 12%
                                         if int(totalImpuesto.find('codigoPorcentaje').text) == 2:    
                                             iva =totalImpuesto.find('valor').text
-                                            subtotal_doce = totalImpuesto.find('baseImponible').text
+                                            baseImponible = totalImpuesto.find('baseImponible').text
+                                            subtotal_doce = float(iva) + float(baseImponible)
                                         else:
                                             iva = '0.00'
                                             subtotal_doce = '0.00'
@@ -545,6 +546,9 @@ def downloadPdf(request):
                     style2 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 8 )
                     style3 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 7, alignment = TA_CENTER, )
                     style4 = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 8 )
+                    productsLeftStyle = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 7, alignment = TA_LEFT )
+                    productsCenterStyle = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 7, alignment = TA_CENTER, )
+                    productosRightStyle = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 7, alignment = TA_RIGHT, )
 
                     if detalles is not None:
                         
@@ -560,25 +564,25 @@ def downloadPdf(request):
                                 codigoPrincipal = child.find('codigoPrincipal').text
                             else:
                                 codigoPrincipal = ''
-                            detalle1 = Paragraph(codigoPrincipal, style4)
+                            detalle1 = Paragraph(codigoPrincipal, productsCenterStyle)
 
                             if child.find('codigoAuxiliar') is not None:
                                 codigoAuxiliar = child.find('codigoAuxiliar').text
                             else:
                                 codigoAuxiliar = ''
-                            detalle2 = Paragraph(codigoAuxiliar, style4)
+                            detalle2 = Paragraph(codigoAuxiliar, productsCenterStyle)
 
                             if child.find('cantidad') is not None:
                                 cantidad = child.find('cantidad').text
                             else:
                                 cantidad = '0'
-                            detalle3 = Paragraph(cantidad, style4)
+                            detalle3 = Paragraph(cantidad, productsCenterStyle)
 
                             if child.find('descripcion') is not None:
                                 descripcion = child.find('descripcion').text
                             else:
                                 descripcion = ''
-                            detalle4 = Paragraph(descripcion, style4)
+                            detalle4 = Paragraph(descripcion, productsLeftStyle)
 
                             if child.find('detallesAdicionales') is not None:
                                 for child2 in child.find('detallesAdicionales').findall('detAdicional'):
@@ -587,37 +591,37 @@ def downloadPdf(request):
                                         valor = child2.get('valor=')
                                         detalleAd += str(nombre) + ':   '+ str(valor) +'\n'
                             
-                            detalle5 = Paragraph(detalleAd, style4)
+                            detalle5 = Paragraph(detalleAd, productsLeftStyle)
 
                             if child.find('precioUnitario') is not None:
                                 precioUnitario = child.find('precioUnitario').text
                             else:
                                 precioUnitario = '0.00'
-                            detalle6 = Paragraph(precioUnitario, style4) 
+                            detalle6 = Paragraph(precioUnitario, productosRightStyle) 
 
                             if child.find('precioSinSubsidio') is not None:
                                 precioSinSubsidio = child.find('precioSinSubsidio').text
                             else:
                                 precioSinSubsidio = '0.00' 
-                            detalle8 = Paragraph(precioSinSubsidio, style4)
+                            detalle8 = Paragraph(precioSinSubsidio, productosRightStyle)
 
                             if float(precioSinSubsidio) == 0.00:
                                 subsidio = '0.00'
                             else:
                                 subsidio = float(precioSinSubsidio) - float(precioTotalSinImpuesto)  
-                            detalle7 = Paragraph(subsidio, style4)                         
+                            detalle7 = Paragraph(subsidio, productosRightStyle)                         
                             
                             if child.find('descuento') is not None:
                                 descuento = child.find('descuento').text
                             else:
                                 descuento = ''
-                            detalle9 = Paragraph(descuento, style4)
+                            detalle9 = Paragraph(descuento, productosRightStyle)
 
                             if child.find('precioTotalSinImpuesto') is not None:
                                 precioTotalSinImpuesto = child.find('precioTotalSinImpuesto').text
                             else:
                                 precioTotalSinImpuesto = '0.00'
-                            detalle10 = Paragraph(precioTotalSinImpuesto, style4)
+                            detalle10 = Paragraph(precioTotalSinImpuesto, productosRightStyle)
 
                             detallesArray.append(detalle1)
                             detallesArray.append(detalle2)
@@ -820,7 +824,7 @@ def downloadPdf(request):
                 infoAdicionalArray = [[p], [p1]]
                 tableAdicional = Table(infoAdicionalArray, colWidths=[300])
                 tableAdicional.canv = c
-                w, height = tableAdicional.wrap(0,0)
+                w, heightInfoAdicional = tableAdicional.wrap(0,0)
                 tableAdicional.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
                                     ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
@@ -830,19 +834,20 @@ def downloadPdf(request):
                 #Crea la tabla de forma de pago
                 p = Paragraph('Forma de Pago', style3)
                 p1 = Paragraph('Valor', style3)
-                p2 = Paragraph(formaPago, style4)
-                p3 = Paragraph(total, style4)
+                p2 = Paragraph(formaPago, productsLeftStyle)
+                p3 = Paragraph(total, productosRightStyle)
                 formaPagoArray = [[p, p1], [p2, p3]]
-                tablePago = Table(formaPagoArray, colWidths=[150, 75])
+                tablePago = Table(formaPagoArray, colWidths=[175, 75])
                 tablePago.canv = c
-                w, height1 = tablePago.wrap(0,0)
+                w, heightFormaPago = tablePago.wrap(0,0)
                 tablePago.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
                                     ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                    ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                    ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
                 tablePago.wrapOn(c, size[0], size[1])
 
-                #Datos para la tabla de totales 
+                #Crea la tabla de totales
                 arregloTotales = [['SUBTOTAL 12%', subtotal_doce], 
                                 ['SUBTOTAL 0%', subtotal_cero], 
                                 ['SUBTOTAL NO OBJETO DE IVA', noObjetoIva], 
@@ -855,12 +860,30 @@ def downloadPdf(request):
                                 ['PROPINA', propina],
                                 ['VALOR TOTAL', importeTotal]]
 
-                table = Table(arregloTotales, colWidths=[150, 50])
-                table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                tableTotal = Table(arregloTotales, colWidths=[150, 50])
+                tableTotal.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                    ("ALIGN", (1,0), (1,-1), "RIGHT"),
                                     ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                    ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                    ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                tableTotal.wrapOn(c, size[0], size[1])
+
+                #Crea la tabla de subsidios
+                p = Paragraph('VALOR TOTAL SIN SUBSIDIO', productsLeftStyle)
+                p1 = Paragraph('AHORRO POR SUBSIDIO', productsLeftStyle)
+                p2 = Paragraph(str(valorSinSubsidio), productosRightStyle)
+                p3 = Paragraph(totalSubsidio, productosRightStyle)
+                formaPagoArray = [[p, p2], [p1, p3]]
+                tableSubsidio = Table(formaPagoArray, colWidths=[150, 50])
+                tableSubsidio.canv = c
+                w, heightSubsidio = tableSubsidio.wrap(0,0)
+                tableSubsidio.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                    ("ALIGN", (1,0), (-1,-1), "RIGHT"),
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                table.wrapOn(c, size[0], size[1])
+                tableSubsidio.wrapOn(c, size[0], size[1])
 
                 #Dibuja las tablas cuando alcanza en la primera hoja del pdf
                 if (h <= 390 and pagina == 0):
@@ -871,30 +894,73 @@ def downloadPdf(request):
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (390-h))
 
-                    #Comprueba si entra en la página o crea una nueva página 
-                    if height > (385-h):
+                    #Dibujas las tablas informació adicional y de totales
+                    if (heightInfoAdicional <= (385-h) and (390-h) >= 198):
+                        tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
+                        tableTotal.drawOn(c, (374.5), (390-h-198))
+
+                        #Dibuja la tabla de forma de pago
+                        if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
+                            tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                            tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                        
+                        if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
+                            c.showPage()
+                            c.translate(0,(0.7)*inch)
+                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                            tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                        if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
+                            tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                            c.showPage()
+                            c.translate(0,(0.7)*inch)
+                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                        
+                        if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
+                            tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                            c.showPage()
+                            c.translate(0,(0.7)*inch)
+                            tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+                    
+                    if (heightInfoAdicional > (385-h) and (390-h) < 198):
                         c.showPage()
                         c.translate(0,(0.7)*inch)
-                        tableAdicional.drawOn(c, (0.2)*inch, (750-height))
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                        tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                        tableTotal.drawOn(c, (374.5), (750-198))
+                        tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
+                    
+                    if (heightInfoAdicional > (385-h) and (390-h) >= 198):
+                        tableTotal.drawOn(c, (374.5), (390-h-198))
 
-                        #Dibuja la tabla de forma de pago
-                        if (height1 > (745-height)):
+                        if (heightSubsidio <= (385-h-198)):
+                            tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-height1))
+                            tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
                         else:
-                            tablePago.drawOn(c, (0.2)*inch, (745-height-height1))
-
-                    else:
-                        tableAdicional.drawOn(c, (0.2)*inch, (385-h-height))
-
-                        #Dibuja la tabla de forma de pago
-                        if (height1 > (380-h-height)):
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-height1))
+                            tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+                            tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+
+                    if (heightInfoAdicional <= (385-h) and (390-h) < 198):
+                        tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
+
+                        if (heightFormaPago <= (380-h-heightInfoAdicional)):
+                            tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                            c.showPage()
+                            c.translate(0,(0.7)*inch)
+                            tableTotal.drawOn(c, (374.5), (750-198))
+                            tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
                         else:
-                            tablePago.drawOn(c, (0.2)*inch, (380-h-height-height1))
+                            c.showPage()
+                            c.translate(0,(0.7)*inch)
+                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                            tableTotal.drawOn(c, (374.5), (750-198))
+                            tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
                     
 
                 #Dibuja las tablas en las demas hojas del pdf
@@ -907,29 +973,29 @@ def downloadPdf(request):
                     table.drawOn(c, (0.2)*inch, (750-h))
 
                     #Comprueba si entra en la página o crea una nueva página 
-                    if height > (745-h):
+                    if heightInfoAdicional > (745-h):
                         c.showPage()
                         c.translate(0,(0.7)*inch)
-                        tableAdicional.drawOn(c, (0.2)*inch, (750-height))
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
 
                         #Bibuja la tabla de forma de pago
-                        if (height1 > (745-height)):
+                        if (heightFormaPago > (745-heightInfoAdicional)):
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
                         else:
-                            tablePago.drawOn(c, (0.2)*inch, (745-height-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
 
                     else:
-                        tableAdicional.drawOn(c, (0.2)*inch, (745-h-height))
+                        tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
 
                         #Bibuja la tabla de forma de pago
-                        if (height1 > (740-h-height)):
+                        if (heightFormaPago > (740-h-heightInfoAdicional)):
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
                         else:
-                            tablePago.drawOn(c, (0.2)*inch, (740-h-height-height1))
+                            tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
 
                 c.save()
 
@@ -1428,7 +1494,8 @@ def downloadeExcel(request):
                                         # iva 12%
                                         if int(totalImpuesto.find('codigoPorcentaje').text) == 2:    
                                             iva =totalImpuesto.find('valor').text
-                                            subtotal_doce = totalImpuesto.find('baseImponible').text
+                                            baseImponible = totalImpuesto.find('baseImponible').text
+                                            subtotal_doce = float(iva) + float(baseImponible)
                                             worksheet.write('P'+str(count), subtotal_doce, data_format)
                                             worksheet.write('W'+str(count), iva, data_format)
                                         else:
