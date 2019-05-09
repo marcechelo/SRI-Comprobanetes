@@ -902,14 +902,18 @@ def downloadPdf(request):
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (390-h))
 
+                    #Calculo del número de filas que entran en el espacio sobrante 
                     tamanioTablaTotales = (390-h) // 18
 
+                    #La tabla de totales entra en el espacio de la primera página
                     if tamanioTablaTotales >= 11:
                         tableTotal.drawOn(c, (374.5), (390-h-198))
 
+                        #La tabal de información adicional entra en el espacio sobrante
                         if heightInfoAdicional <= (385-h):
                             tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
                         
+                            #Cuatro if's que determinan la posicion de las tablas de forma de pago y subsisio
                             if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
                                 tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
                                 tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
@@ -931,8 +935,12 @@ def downloadPdf(request):
                                 c.showPage()
                                 c.translate(0,(0.7)*inch)
                                 tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-                        
+
+                        #La tabal de información adicional no entra en el espacio sobrante
                         else:
+
+                            #La tabla de subsidio entra en el espacio de la primera página y se
+                            #dibujan las tablas de información adicional y forma de pago en otra página
                             if heightSubsidio <= (385-h-198):
                                 tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
                                 c.showPage()
@@ -940,6 +948,8 @@ def downloadPdf(request):
                                 tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
                                 tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
                             
+                            #Si dibujan las tres tablas (subsidios, totales e información adicional) 
+                            # en una nueva página
                             else: 
                                 c.showPage()
                                 c.translate(0,(0.7)*inch)
@@ -947,18 +957,21 @@ def downloadPdf(request):
                                 tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
                                 tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
 
-                    
+                    #Solo una parte de la tabla de totales entra en el espacio sobrante
                     if (tamanioTablaTotales < 11 and tamanioTablaTotales >= 1):
 
                         auxiliarTotales = []
                         auxiliarTotales2 = []
 
+                        #Se crea dos nuevos arreglos con una porción del arreglo principal en cada uno,
+                        #segun el espacio sobrante, para dibujarlos en páginas diferentes 
                         for item in arregloTotales[:(tamanioTablaTotales)]:
                             auxiliarTotales.append(item)
                         
                         for item in arregloTotales[tamanioTablaTotales:]:
                             auxiliarTotales2.append(item)
                         
+                        #Se crea las tablas y estilos con los que serán dibujadas
                         tableTotal1 = Table(auxiliarTotales, colWidths=[150, 50])
                         tableTotal1.canv = c
                         w, heightAux = tableTotal1.wrap(0,0)
@@ -984,9 +997,12 @@ def downloadPdf(request):
                                             ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
                         tableTotal2.wrapOn(c, size[0], size[1])
 
+                        #La tabla de información adicional entra en el espacio sobrante de la primera página
                         if heightInfoAdicional <= (385-h):
                             tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
 
+                            #La tabla de forma de pago entra en el espacio sobrante de la primera página y se dibuja 
+                            #en una nueva página las tablas de totales y subsidio
                             if (heightFormaPago <= (380-h-heightInfoAdicional)):
                                 tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
                                 c.showPage()
@@ -994,6 +1010,7 @@ def downloadPdf(request):
                                 tableTotal2.drawOn(c, (374.5), (750-heightAux2))
                                 tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
                             
+                            #Las tres tablas se dibujan en una nueva página 
                             else:
                                 c.showPage()
                                 c.translate(0,(0.7)*inch)
@@ -1001,6 +1018,8 @@ def downloadPdf(request):
                                 tableTotal2.drawOn(c, (374.5), (750-heightAux2))
                                 tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
 
+                        #Se dibuja las restantes tablas en una nueva página ya que ninguna entra en el epsacio sobrante
+                        #de la primera página
                         else:
                             c.showPage()
                             c.translate(0,(0.7)*inch)
@@ -1009,6 +1028,7 @@ def downloadPdf(request):
                             tableTotal2.drawOn(c, (374.5), (750-heightAux2))
                             tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
 
+                    #Ninguna tabla entra en el espacio sobrante
                     if tamanioTablaTotales <= 0:
                         c.showPage()
                         c.translate(0,(0.7)*inch)
@@ -1025,31 +1045,142 @@ def downloadPdf(request):
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (750-h))
+                
+                    #Calculo del número de filas que entran en el espacio sobrante 
+                    tamanioTablaTotales = (750-h) // 18
 
-                    #Comprueba si entra en la página o crea una nueva página 
-                    if heightInfoAdicional > (745-h):
+                    #La tabla de totales entra en el espacio de la página
+                    if tamanioTablaTotales >= 11:
+                        tableTotal.drawOn(c, (374.5), (750-h-198))
+
+                        #La tabla de información adicional entra en el espacio sobrante
+                        if heightInfoAdicional <= (745-h):
+                            tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
+                        
+                            #Cuatro if's que determinan la posicion de las tablas de forma de pago y subsisio
+                            if (heightFormaPago <= (740-h-heightInfoAdicional) and heightSubsidio <= (745-h-198)):
+                                tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
+                            
+                            if (heightFormaPago > (740-h-heightInfoAdicional) and heightSubsidio > (745-h-198)):
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                            if (heightFormaPago > (740-h-heightInfoAdicional) and heightSubsidio <= (745-h-198)):
+                                tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                            
+                            if (heightFormaPago <= (740-h-heightInfoAdicional) and heightSubsidio > (745-h-198)):
+                                tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                        #La tabal de información adicional no entra en el espacio sobrante
+                        else:
+
+                            #La tabla de subsidio entra en el espacio de la página y se
+                            #dibujan las tablas de información adicional y forma de pago en otra página
+                            if heightSubsidio <= (745-h-198):
+                                tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                            
+                            #Si dibujan las tres tablas (subsidios, totales e información adicional) 
+                            # en una nueva página
+                            else: 
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                    #Solo una parte de la tabla de totales entra en el espacio sobrante
+                    if (tamanioTablaTotales < 11 and tamanioTablaTotales >= 1):
+
+                        auxiliarTotales = []
+                        auxiliarTotales2 = []
+
+                        #Se crea dos nuevos arreglos con una porción del arreglo principal en cada uno,
+                        #segun el espacio sobrante, para dibujarlos en páginas diferentes 
+                        for item in arregloTotales[:(tamanioTablaTotales)]:
+                            auxiliarTotales.append(item)
+                        
+                        for item in arregloTotales[tamanioTablaTotales:]:
+                            auxiliarTotales2.append(item)
+                        
+                        #Se crea las tablas y estilos con los que serán dibujadas
+                        tableTotal1 = Table(auxiliarTotales, colWidths=[150, 50])
+                        tableTotal1.canv = c
+                        w, heightAux = tableTotal1.wrap(0,0)
+                        tableTotal1.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                            ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                            ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                            ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                            ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                            ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                        tableTotal1.wrapOn(c, size[0], size[1])
+                        tableTotal1.drawOn(c, (374.5), (750-h-heightAux))
+
+                        tableTotal2 = Table(auxiliarTotales2, colWidths=[150, 50])
+                        tableTotal2.canv = c
+                        w, heightAux2 = tableTotal2.wrap(0,0)
+                        tableTotal2.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                            ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                            ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                            ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                            ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                            ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                        tableTotal2.wrapOn(c, size[0], size[1])
+
+                        #La tabla de información adicional entra en el espacio sobrante de la primera página
+                        if heightInfoAdicional <= (745-h):
+                            tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
+
+                            #La tabla de forma de pago entra en el espacio sobrante de la primera página y se dibuja 
+                            #en una nueva página las tablas de totales y subsidio
+                            if (heightFormaPago <= (740-h-heightInfoAdicional)):
+                                tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+                            
+                            #Las tres tablas se dibujan en una nueva página 
+                            else:
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+
+                        #Se dibuja las restantes tablas en una nueva página ya que ninguna entra en el epsacio sobrante
+                        #de la primera
+                        else:
+                            c.showPage()
+                            c.translate(0,(0.7)*inch)
+                            tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                            tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                            tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+
+                    #Ninguna tabla entra en el espacio sobrante
+                    if tamanioTablaTotales <= 0:
                         c.showPage()
                         c.translate(0,(0.7)*inch)
+                        tableTotal.drawOn(c, (374.5), (750-198))
+                        tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
                         tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                        tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
 
-                        #Bibuja la tabla de forma de pago
-                        if (heightFormaPago > (745-heightInfoAdicional)):
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                        else:
-                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-
-                    else:
-                        tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
-
-                        #Bibuja la tabla de forma de pago
-                        if (heightFormaPago > (740-h-heightInfoAdicional)):
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                        else:
-                            tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
 
                 c.save()
 
