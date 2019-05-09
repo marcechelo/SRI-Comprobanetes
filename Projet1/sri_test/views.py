@@ -436,7 +436,7 @@ def downloadPdf(request):
                             fechaEmision = ''
 
                         if infoFactura.find('totalDescuento') is not None:
-                            totalDescuento = infoFactura.find('totalDescuento').text
+                            totalDescuento = "{0:.2f}".format(float(infoFactura.find('totalDescuento').text))
                         else:
                             totalDescuento = '0'
 
@@ -464,27 +464,28 @@ def downloadPdf(request):
                             formaPago = ''
 
                         if infoFactura.find('pagos').find('pago').find('total') is not None:
-                            total = infoFactura.find('pagos').find('pago').find('total').text
+                            total0 = float(infoFactura.find('pagos').find('pago').find('total').text)
+                            total ="{0:.2f}".format(total0)
                         else:
                             total = '0'
 
                         if infoFactura.find('totalSinImpuestos') is not None:
-                                totalSinImpuestos =  infoFactura.find('totalSinImpuestos').text
+                                totalSinImpuestos = "{0:.2f}".format(float(infoFactura.find('totalSinImpuestos').text))
                         else:
                             totalSinImpuestos = '0'
 
                         if infoFactura.find('propina') is not None:
-                            propina = infoFactura.find('propina').text
+                            propina = "{0:.2f}".format(float(infoFactura.find('propina').text))
                         else:
                             propina = '0.00'
 
                         if infoFactura.find('importeTotal') is not None:
-                            importeTotal = infoFactura.find('importeTotal').text
+                            importeTotal = "{0:.2f}".format(float(infoFactura.find('importeTotal').text))
                         else:
                             importeTotal = '0.00'
 
                         if infoFactura.find('totalSubsidio') is not None:
-                            totalSubsidio = infoFactura.find('totalSubsidio').text
+                            totalSubsidio = "{0:.2f}".format(float(infoFactura.find('totalSubsidio').text))
                         else:
                             totalSubsidio = '0.00'
 
@@ -500,22 +501,22 @@ def downloadPdf(request):
                                         
                                         # iva 12%
                                         if int(totalImpuesto.find('codigoPorcentaje').text) == 2:    
-                                            iva =totalImpuesto.find('valor').text
+                                            iva = "{0:.2f}".format(float(totalImpuesto.find('valor').text))
                                             baseImponible = totalImpuesto.find('baseImponible').text
-                                            subtotal_doce = float(iva) + float(baseImponible)
+                                            subtotal_doce = "{0:.2f}".format(float(iva) + float(baseImponible))
                                         else:
                                             iva = '0.00'
                                             subtotal_doce = '0.00'
                                         
                                         # iva 0%
                                         if int(totalImpuesto.find('codigoPorcentaje').text) == 0:    
-                                            subtotal_cero = totalImpuesto.find('baseImponible').text
+                                            subtotal_cero = "{0:.2f}".format(float(totalImpuesto.find('baseImponible').text))
                                         else:
                                             subtotal_cero = '0.00'
 
                                         # no objeto de iva
                                         if int(totalImpuesto.find('codigoPorcentaje').text) == 6:
-                                            noObjetoIva = totalImpuesto.find('baseImponible').text
+                                            noObjetoIva = "{0:.2f}".format(float(totalImpuesto.find('baseImponible').text))
                                         else:
                                             noObjetoIva = '0.00'
                                         
@@ -526,7 +527,7 @@ def downloadPdf(request):
                                             exentoIva = '0.00'
 
                                     if (int(totalImpuesto.find('codigo').text) == 3 ):
-                                        ice = totalImpuesto.find('valor').text
+                                        ice = "{0:.2f}".format(float(totalImpuesto.find('valor').text))
                                         countIce +=1
                                     
                                     if int(totalImpuesto.find('codigo').text) == 5:
@@ -573,7 +574,8 @@ def downloadPdf(request):
                             detalle2 = Paragraph(codigoAuxiliar, productsCenterStyle)
 
                             if child.find('cantidad') is not None:
-                                cantidad = child.find('cantidad').text
+                                can = float(child.find('cantidad').text)
+                                cantidad = "{0:.2f}".format(can)
                             else:
                                 cantidad = '0'
                             detalle3 = Paragraph(cantidad, productsCenterStyle)
@@ -594,13 +596,15 @@ def downloadPdf(request):
                             detalle5 = Paragraph(detalleAd, productsLeftStyle)
 
                             if child.find('precioUnitario') is not None:
-                                precioUnitario = child.find('precioUnitario').text
+                                precUni = float(child.find('precioUnitario').text)
+                                precioUnitario = "{0:.2f}".format(precUni)
                             else:
                                 precioUnitario = '0.00'
                             detalle6 = Paragraph(precioUnitario, productosRightStyle) 
 
                             if child.find('precioSinSubsidio') is not None:
-                                precioSinSubsidio = child.find('precioSinSubsidio').text
+                                precioSinSub = float(child.find('precioSinSubsidio').text)
+                                precioSinSubsidio = "{0:.2f}".format(precioSinSub)
                             else:
                                 precioSinSubsidio = '0.00' 
                             detalle8 = Paragraph(precioSinSubsidio, productosRightStyle)
@@ -608,17 +612,19 @@ def downloadPdf(request):
                             if float(precioSinSubsidio) == 0.00:
                                 subsidio = '0.00'
                             else:
-                                subsidio = float(precioSinSubsidio) - float(precioTotalSinImpuesto)  
+                                subsidio = "{0:.2f}".format(float(precioSinSubsidio) - float(precioTotalSinImpuesto))
                             detalle7 = Paragraph(subsidio, productosRightStyle)                         
                             
                             if child.find('descuento') is not None:
-                                descuento = child.find('descuento').text
+                                descue = float(child.find('descuento').text)
+                                descuento = "{0:.2f}".format(descue)
                             else:
                                 descuento = ''
                             detalle9 = Paragraph(descuento, productosRightStyle)
 
                             if child.find('precioTotalSinImpuesto') is not None:
-                                precioTotalSinImpuesto = child.find('precioTotalSinImpuesto').text
+                                precioTotalSinIm = float(child.find('precioTotalSinImpuesto').text)
+                                precioTotalSinImpuesto = "{0:.2f}".format(precioTotalSinIm)
                             else:
                                 precioTotalSinImpuesto = '0.00'
                             detalle10 = Paragraph(precioTotalSinImpuesto, productosRightStyle)
@@ -885,6 +891,8 @@ def downloadPdf(request):
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
                 tableSubsidio.wrapOn(c, size[0], size[1])
 
+                tamanioTablaTotales = 0
+
                 #Dibuja las tablas cuando alcanza en la primera hoja del pdf
                 if (h <= 390 and pagina == 0):
                     table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
@@ -894,74 +902,120 @@ def downloadPdf(request):
                     table.wrapOn(c, size[0], size[1])
                     table.drawOn(c, (0.2)*inch, (390-h))
 
-                    #Dibujas las tablas informació adicional y de totales
-                    if (heightInfoAdicional <= (385-h) and (390-h) >= 198):
-                        tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
+                    tamanioTablaTotales = (390-h) // 18
+
+                    if tamanioTablaTotales >= 11:
                         tableTotal.drawOn(c, (374.5), (390-h-198))
 
-                        #Dibuja la tabla de forma de pago
-                        if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
-                            tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
-                            tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                        if heightInfoAdicional <= (385-h):
+                            tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
                         
-                        if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                            tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+                            if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
+                                tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                            
+                            if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
 
-                        if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
-                            tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                            if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
+                                tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                            
+                            if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
+                                tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
                         
-                        if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
-                            tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                        else:
+                            if heightSubsidio <= (385-h-198):
+                                tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                            
+                            else: 
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                    
+                    if (tamanioTablaTotales < 11 and tamanioTablaTotales >= 1):
+
+                        auxiliarTotales = []
+                        auxiliarTotales2 = []
+
+                        for item in arregloTotales[:(tamanioTablaTotales)]:
+                            auxiliarTotales.append(item)
+                        
+                        for item in arregloTotales[tamanioTablaTotales:]:
+                            auxiliarTotales2.append(item)
+                        
+                        tableTotal1 = Table(auxiliarTotales, colWidths=[150, 50])
+                        tableTotal1.canv = c
+                        w, heightAux = tableTotal1.wrap(0,0)
+                        tableTotal1.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                            ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                            ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                            ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                            ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                            ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                        tableTotal1.wrapOn(c, size[0], size[1])
+                        tableTotal1.drawOn(c, (374.5), (390-h-heightAux))
+
+                        tableTotal2 = Table(auxiliarTotales2, colWidths=[150, 50])
+                        tableTotal2.canv = c
+                        w, heightAux2 = tableTotal2.wrap(0,0)
+                        tableTotal2.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                            ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                            ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                            ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                            ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                            ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                        tableTotal2.wrapOn(c, size[0], size[1])
+
+                        if heightInfoAdicional <= (385-h):
+                            tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
+
+                            if (heightFormaPago <= (380-h-heightInfoAdicional)):
+                                tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+                            
+                            else:
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+
+                        else:
                             c.showPage()
                             c.translate(0,(0.7)*inch)
-                            tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-                    
-                    if (heightInfoAdicional > (385-h) and (390-h) < 198):
+                            tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                            tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                            tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+
+                    if tamanioTablaTotales <= 0:
                         c.showPage()
                         c.translate(0,(0.7)*inch)
-                        tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                        tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
                         tableTotal.drawOn(c, (374.5), (750-198))
                         tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
-                    
-                    if (heightInfoAdicional > (385-h) and (390-h) >= 198):
-                        tableTotal.drawOn(c, (374.5), (390-h-198))
-
-                        if (heightSubsidio <= (385-h-198)):
-                            tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-                        else:
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-                            tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-
-                    if (heightInfoAdicional <= (385-h) and (390-h) < 198):
-                        tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
-
-                        if (heightFormaPago <= (380-h-heightInfoAdicional)):
-                            tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tableTotal.drawOn(c, (374.5), (750-198))
-                            tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
-                        else:
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                            tableTotal.drawOn(c, (374.5), (750-198))
-                            tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
-                    
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                        tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
 
                 #Dibuja las tablas en las demas hojas del pdf
                 if(h <= 750 and pagina != 0):
