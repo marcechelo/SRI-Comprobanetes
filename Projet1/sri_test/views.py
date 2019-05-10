@@ -37,6 +37,7 @@ from flask_restful import Resource, Api
 
 from collections import namedtuple
 
+from unicodedata import normalize
 
 import os, os.path
 import requests
@@ -48,6 +49,7 @@ import reportlab
 import datetime
 import dateutil.parser
 import code128
+import string
 
 
 app = Flask(__name__)
@@ -207,14 +209,23 @@ def downloadxml(request):
         print(dirname)
         root.destroy()
         if dirname != '':
-            for i in dataDocumentArray:
-                # print("______________________________________")
-                # print(i[8])
+            for i in dataDocumentArray[1:]:
+
+                claveAcceso = ''
+                if i[0] == 'Factura':
+                    claveAcceso = i[8]
+                if i[0] == 'Comprobante de Retención':
+                    claveAcceso = i[9]
+                if i[0] == 'Notas de Crédito':
+                    claveAcceso = i[9]
+                if i[0] == 'Notas de Débito':
+                    claveAcceso = i[9]
+
                 headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
                 body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
                 body += "    <Body>"
                 body += "       <autorizacionComprobante xmlns=\"http://ec.gob.sri.ws.autorizacion\">"
-                body += "           <claveAccesoComprobante xmlns=\"\">"+i[8]+"</claveAccesoComprobante>"
+                body += "           <claveAccesoComprobante xmlns=\"\">"+claveAcceso+"</claveAccesoComprobante>"
                 body += "       </autorizacionComprobante>"
                 body += "    </Body>"
                 body += "</Envelope>"
@@ -222,7 +233,7 @@ def downloadxml(request):
                 xml_response = r.text
                 xml_response = xml_response.replace("&lt;","<")
                 xml_response = xml_response.replace("&#xd;","")
-                with open(os.path.join(os.path.join(os.path.expanduser('~'),dirname,i[8]+".xml")), "w+") as file1:
+                with open(os.path.join(os.path.join(os.path.expanduser('~'),dirname,i[1]+".xml")), "w+") as file1:
                     file1.write(xml_response)
                 #f = open(i[8]+".xml","w+")
                 #f.write(xml_response)
@@ -250,13 +261,21 @@ def downloadPdf(request):
 
             for i in dataDocumentArray[1:]:
         
-                # print("______________________________________")
-                # print(i[8])
+                claveAcceso = ''
+                if i[0] == 'Factura':
+                    claveAcceso = i[8]
+                if i[0] == 'Comprobante de Retención':
+                    claveAcceso = i[9]
+                if i[0] == 'Notas de Crédito':
+                    claveAcceso = i[9]
+                if i[0] == 'Notas de Débito':
+                    claveAcceso = i[9]
+
                 headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
                 body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
                 body += "    <Body>"
                 body += "       <autorizacionComprobante xmlns=\"http://ec.gob.sri.ws.autorizacion\">"
-                body += "           <claveAccesoComprobante xmlns=\"\">"+i[8]+"</claveAccesoComprobante>"
+                body += "           <claveAccesoComprobante xmlns=\"\">"+claveAcceso+"</claveAccesoComprobante>"
                 body += "       </autorizacionComprobante>"
                 body += "    </Body>"
                 body += "</Envelope>"
@@ -596,7 +615,7 @@ def downloadPdf(request):
                         adicional = ''
 
                 #Creación del PDF
-                pathDir = dirname + '/'+ No + '.pdf'
+                pathDir = dirname + '/'+ i[1] + '.pdf'
                 print(pathDir)
                 c = canvas.Canvas(pathDir, pagesize=A4)
                 c.translate(0,(0.7)*inch)
@@ -1180,6 +1199,7 @@ def downloadeExcel(request):
             merge_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter', 'font_size': 12, 'border': 1,})
             
             #Tamaños de las columnas
+            worksheet.set_column('A:A',20)
             worksheet.set_column('B:C',20)
             worksheet.set_column('D:D',20)
             worksheet.set_column('E:E',15)
@@ -1201,7 +1221,7 @@ def downloadeExcel(request):
             worksheet.merge_range('AD1:AE1', 'Forma de Pago', merge_format)
 
             #Capos descripcion
-            worksheet.write('A2', '#', titles_format) 
+            worksheet.write('A2', 'Tipo de Comprobante', titles_format) 
             worksheet.write('B2', 'R.U.C', titles_format) 
             worksheet.write('C2', 'No', titles_format) 
             worksheet.write('D2', 'Fecha y Hora de Autorización', titles_format)
@@ -1242,21 +1262,19 @@ def downloadeExcel(request):
 
             for i in dataDocumentArray[1:]:
                 count += 1
-                worksheet.write('A'+str(count), count-2, data_format) 
-                # print("______________________________________")
-                # print(i[8])
-                headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
-                body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
-                body += "    <Body>"
-                body += "       <autorizacionComprobante xmlns=\"http://ec.gob.sri.ws.autorizacion\">"
-                body += "           <claveAccesoComprobante xmlns=\"\">"+i[8]+"</claveAccesoComprobante>"
-                body += "       </autorizacionComprobante>"
-                body += "    </Body>"
-                body += "</Envelope>"
-                r = requests.post(url="https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl", data=body, headers=headers)
-                xml_response = r.text
-                #xml_response = xml_response.replace
+                
+                claveAcceso = ''
+                if i[0] == 'Factura':
+                    claveAcceso = i[8]
+                if i[0] == 'Comprobante de Retención':
+                    claveAcceso = i[9]
+                if i[0] == 'Notas de Crédito':
+                    claveAcceso = i[9]
+                if i[0] == 'Notas de Débito':
+                    claveAcceso = i[9]
 
+                xml_response = bodyHeader(claveAcceso)
+                
                 ns = {'soap':'http://schemas.xmlsoap.org/soap/envelope/'}
                 ns2 = {'ns2': 'http://ec.gob.sri.ws.autorizacion'}
                 root = ElementTree.fromstring(xml_response)
@@ -1329,6 +1347,25 @@ def downloadeExcel(request):
                             nombreComercial = infoTributaria.find('nombreComercial').text
                         else:
                             nombreComercial = ''
+
+                        if infoTributaria.find('codDoc') is not None:
+                            codDoc = int(infoTributaria.find('codDoc').text)
+                        else:
+                            codDoc = 0
+                            
+                        if codDoc == 1:
+                            codigDoc = 'FACTURA'
+                        if codDoc == 4:
+                            codigDoc = 'NOTA DE CRÉDITO'
+                        if codDoc == 5:
+                            codigDoc = 'NOTA DE DÉBITO'
+                        if codDoc == 6:
+                            codigDoc = 'GUÍA DE REMISIÓN'
+                        if codDoc == 7:
+                            codigDoc = 'COMPROBANTE DE RETENCIÓN'
+                        if codDoc == 0:
+                            codigDoc = ''
+                        worksheet.write('A'+str(count), codigDoc, data_format)   
                     
                     if infoFactura is not None:
 
@@ -1509,3 +1546,15 @@ def downloadeExcel(request):
     else:
         return HttpResponse(0)
 
+def bodyHeader(arg):
+    headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
+    body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+    body += "    <Body>"
+    body += "       <autorizacionComprobante xmlns=\"http://ec.gob.sri.ws.autorizacion\">"
+    body += "           <claveAccesoComprobante xmlns=\"\">"+arg+"</claveAccesoComprobante>"
+    body += "       </autorizacionComprobante>"
+    body += "    </Body>"
+    body += "</Envelope>"
+    r = requests.post(url="https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl", data=body, headers=headers)
+
+    return (r.text)
