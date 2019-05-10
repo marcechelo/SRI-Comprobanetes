@@ -15,6 +15,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.utils import ImageReader
 
 from tkinter import filedialog
 import tkinter
@@ -46,6 +47,7 @@ import xlsxwriter
 import reportlab
 import datetime
 import dateutil.parser
+import code128
 
 
 app = Flask(__name__)
@@ -383,6 +385,24 @@ def downloadPdf(request):
                             ruc = infoTributaria.find('ruc').text
                         else:
                             ruc = ''
+                        
+                        if infoTributaria.find('codDoc') is not None:
+                            codDoc = int(infoTributaria.find('codDoc').text)
+                        else:
+                            codDoc = 0
+                            
+                        if codDoc == 1:
+                            codigDoc = 'FACTURA'
+                        if codDoc == 4:
+                            codigDoc = 'NOTA DE CRÉDITO'
+                        if codDoc == 5:
+                            codigDoc = 'NOTA DE DÉBITO'
+                        if codDoc == 6:
+                            codigDoc = 'GUÍA DE REMISIÓN'
+                        if codDoc == 7:
+                            codigDoc = 'COMPROBANTE DE RETENCIÓN'
+                        if codDoc == 0:
+                            codigDoc = ''
 
                         if (infoTributaria.find('estab') is not None and
                             infoTributaria.find('ptoEmi') is not None and
@@ -649,7 +669,7 @@ def downloadPdf(request):
                         adicional = ''
 
                 #Creación del PDF
-                pathDir = dirname + '/'+ numeroAutorizacion + '.pdf'
+                pathDir = dirname + '/'+ No + '.pdf'
                 print(pathDir)
                 c = canvas.Canvas(pathDir, pagesize=A4)
                 c.translate(0,(0.7)*inch)
@@ -679,22 +699,25 @@ def downloadPdf(request):
                 p.wrapOn(c, (3.4)*inch, (2.5)*inch)
                 p.drawOn(c, (0.3)*inch, (8.3)*inch)
 
+
+                p = Paragraph('Dirección Matriz', productsLeftStyle)
+                p1 = Paragraph('Dirección sucursal', productsLeftStyle) 
+                p2 = Paragraph(dirMatriz, productsLeftStyle)   
+                p3 = Paragraph(dirEstablecimiento, productsLeftStyle)
+
+                size = A4
+                dataDirecciones = [[p, p2],[p1, p3]]
+                tableDirecciones = Table(dataDirecciones, colWidths=[50, 200])
+                tableDirecciones.canv = c
+                w, heightAux = tableDirecciones.wrap(0,0)
+                tableDirecciones.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                    ("ALIGN", (1,0), (1,-1), "RIGHT"),])
+                tableDirecciones.wrapOn(c, size[0], size[1])
+                tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
+
                 c.setFont("Helvetica", 8)
                 c.setFillColorRGB(0,0,0)
-                c.drawString((0.3)*inch, (8.0)*inch, 'Dirección')
-                c.drawString((0.3)*inch, (7.9)*inch, 'Matriz:')
-
-                p = Paragraph(dirMatriz, style4)
-                p.wrapOn(c, (2.5)*inch, (2.5)*inch)
-                p.drawOn(c, (1.2)*inch, (7.7)*inch)
-                
-                c.drawString((0.3)*inch, (7.3)*inch, 'Dirección')
-                c.drawString((0.3)*inch, (7.2)*inch, 'Sucursal:')
-
-                p = Paragraph(dirEstablecimiento, style4)
-                p.wrapOn(c, (2.5)*inch, (2.5)*inch)
-                p.drawOn(c, (1.2)*inch, (7.0)*inch)
-
                 message = 'OBLIGADO A LLEVAR:                   ' + obligadoContabilidad
                 c.drawString((0.3)*inch, (6.6)*inch, message)
                 
@@ -704,7 +727,7 @@ def downloadPdf(request):
                 c.setFillColorRGB(0,0,0)
                 message = 'R.U.C.: ' + ruc
                 c.drawString((4.1)*inch, (10.3)*inch, message)
-                c.drawString((4.1)*inch, (10)*inch, 'FACTURA')
+                c.drawString((4.1)*inch, (10)*inch, codigDoc)
 
                 c.setFont("Helvetica", 10)
                 message = 'No.  ' + No
@@ -712,9 +735,10 @@ def downloadPdf(request):
 
                 message = 'NÚMERO DE AUTORIZACIÓN'
                 c.drawString((4.1)*inch, (9.4)*inch, message)
-
+                c.setFont("Helvetica", 7)
                 c.drawString((4.1)*inch, (9.1)*inch, numeroAutorizacion)
 
+                c.setFont("Helvetica", 10)
                 message = 'FECHA Y HORA DE'
                 c.drawString((4.1)*inch, (8.8)*inch, message)
 
@@ -732,10 +756,13 @@ def downloadPdf(request):
                 message = 'CLAVE DE ACCESO'
                 c.drawString((4.1)*inch, (7.7)*inch, message)
 
-                message = 'HERE GOES THE IMAGE'
-                c.drawString((4.1)*inch, (6.9)*inch, message)
+                logo = ImageReader(code128.image(numeroAutorizacion))
+                c.drawImage(logo,(4.2)*inch, (6.9)*inch,  width=250, height=40)
+                #message = 'HERE GOES THE IMAGE'
+                #c.drawString((4.1)*inch, (6.9)*inch, message)
 
-                c.drawString((4.1)*inch, (6.7)*inch, numeroAutorizacion)
+                c.setFont("Helvetica", 7)
+                c.drawString((4.6)*inch, (6.7)*inch, numeroAutorizacion)
 
                 c.translate(0*inch, 0*inch)
 
@@ -749,7 +776,7 @@ def downloadPdf(request):
                 message = 'Identificacion                 '+ identificacionComprador
                 c.drawString((0.3)*inch, (6.1)*inch, message)
 
-                message = 'Fecha                            '+ fechaEmision +'                           Placa/Matrícula:                        '+'here goes lisence plate'
+                message = 'Fecha                            '+ fechaEmision #+'                           Placa/Matrícula:                        '+'here goes lisence plate'
                 c.drawString((0.3)*inch, (5.9)*inch, message)
             
                 message = 'Dirección                       '+ direccionComprador
