@@ -139,71 +139,6 @@ def get_xml_sri(auth_number):
     f.write(xml_response)
     # make_pdf(xml_response,auth_number)
     return jsonify({"SRI":1})
-#
-# def make_pdf(xml_file,auth_number):
-#     """
-#     Create a PDF based on the XML data
-#     """
-#     self_canvas = canvas.Canvas(auth_number+".pdf", pagesize=letter)
-#     width, height = letter
-#     styles = getSampleStyleSheet()
-#     xml_bytes = bytes(bytearray(xml_file, encoding = 'utf-8'))
-#     xml_object = objectify.fromstring(xml_bytes)
-#     address = """ <font size="9">
-#     SHIP TO:<br/>
-#     <br/>
-#     %s<br/>
-#     %s<br/>
-#     %s<br/>
-#     %s<br/>
-#     </font>
-#     """ % (xml_object.ambiente, xml_object.ambiente, xml_object.ambiente, xml_object.ambiente)
-#     p = Paragraph(address, styles["Normal"])
-#     p.wrapOn(self_canvas, width, height)
-#     p.drawOn(self_canvas, *coord(18, 40, mm,height))
-#
-#     order_number = '<font size="14"><b>Order #%s </b></font>' % xml_object.ambiente
-#     p = Paragraph(order_number, styles["Normal"])
-#     p.wrapOn(self_canvas, width, height)
-#     p.drawOn(self_canvas, * coord(18, 50, mm,height))
-#
-#     data = []
-#     data.append(["Item ID", "Name", "Price", "Quantity", "Total"])
-#     grand_total = 0
-#     for item in xml_object.detalles.iterchildren():
-#         row = []
-#         row.append(item.codigoPrincipal)
-#         row.append(item.descripcion)
-#         row.append(item.cantidad)
-#         row.append(item.precioUnitario)
-#         total = Decimal(str(item.precioUnitario)) * Decimal(str(item.cantidad))
-#         row.append(str(total))
-#         grand_total += total
-#         data.append(row)
-#     data.append(["", "", "", "Grand Total:", grand_total])
-#     t = Table(data, 1.5 * inch)
-#     t.setStyle(TableStyle([
-#         ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
-#         ('BOX', (0,0), (-1,-1), 0.25, colors.black)
-#     ]))
-#     t.wrapOn(self_canvas, width, height)
-#     t.drawOn(self_canvas, *coord(18, 85, mm,height))
-#
-#     txt = "Thank you for your business!"
-#     p = Paragraph(txt, styles["Normal"])
-#     p.wrapOn(self_canvas, width, height)
-#     p.drawOn(self_canvas, *coord(18, 95, mm,height))
-#
-# def coord(self, x, y, unit=1,height):
-#     """
-#     # http://stackoverflow.com/questions/4726011/wrap-text-in-a-table-reportlab
-#     Helper class to help position flowables in Canvas objects
-#     """
-#     x, y = x * unit, height -  y * unit
-#     return x, y
-
-
-#Read from selected file
 
 def test(request):
 
@@ -258,13 +193,6 @@ def test(request):
         dataDocumentArray = empty
         return render(request, 'sri_test/test.html')
 
-def get_download_path(query):
-    print("Hello World!")
-    result = []
-    return HttpResponse("done")
-
-def reload(request):
-    return render(request, 'sri_test/index.html')
 
 def downloadxml(request):
     global fileUploaded, dataDocumentArray
@@ -305,7 +233,6 @@ def downloadxml(request):
     else:
         return HttpResponse(0)
         
-    
 def downloadPdf(request):
     
     global fileUploaded, dataDocumentArray
@@ -1230,193 +1157,6 @@ def comprobantesEmitidos(request):
     print(tipoComprobanete)
     return HttpResponse('DONE')
 
-def createPDF(request):
-
-    c = canvas.Canvas("Factura.pdf", pagesize=A4)
-    c.translate(0,(0.7)*inch)
-    #c.rotate(180)
-
-    #rect (w,h)
-    c.roundRect(4*inch, (6.5)*inch, 287, 300, 4)
-    c.roundRect((0.2)*inch, (6.5)*inch, 260, 200, 4)
-    c.rect((0.2)*inch, (5.4)*inch, 560, 75)
-
-    #Paragraph style
-    style1 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 10 )
-    style2 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 8 )
-    style3 = ParagraphStyle('parrafo', fontName = "Helvetica-Bold", fontSize = 7, alignment = TA_CENTER, )
-
-    c.setFont("Helvetica", 8)
-    c.setFillColorRGB(255,0,0)
-    
-    #Logo
-    c.setFont("Helvetica-Bold", 28)
-    c.setFillColorRGB(255,0,0)
-    message = 'NO TIENE LOGO'
-    c.drawString(0.5*inch, (10.1)*inch, message)
-
-    #First Square
-
-    message = '####################################################################'
-    #styles = getSampleStyleSheet()    
-    p = Paragraph(message, style1)
-    p.wrapOn(c, (3.4)*inch, (2.5)*inch)  # size of 'textbox' for linebreaks etc.
-    p.drawOn(c, (0.3)*inch, (8.9)*inch)
-
-    p = Paragraph(message, style2)
-    p.wrapOn(c, (3.4)*inch, (2.5)*inch)
-    p.drawOn(c, (0.3)*inch, (8.3)*inch)
-
-    c.setFont("Helvetica", 8)
-    c.setFillColorRGB(0,0,0)
-    c.drawString((0.3)*inch, (8.0)*inch, 'Dirección')
-    c.drawString((0.3)*inch, (7.9)*inch, 'Matriz:')
-
-    message = 'Here goes the direction ############################################################################################################'
-    p = Paragraph(message, style2)
-    p.wrapOn(c, (2.5)*inch, (2.5)*inch)
-    p.drawOn(c, (1.2)*inch, (7.5)*inch)
-    
-    c.drawString((0.3)*inch, (7.3)*inch, 'Dirección')
-    c.drawString((0.3)*inch, (7.2)*inch, 'Sucursal:')
-
-    message = 'Here goes the direction 2############################################################################################################'
-    p = Paragraph(message, style2)
-    p.wrapOn(c, (2.5)*inch, (2.5)*inch)
-    p.drawOn(c, (1.2)*inch, (6.8)*inch)
-
-    message = 'OBLIGADO A LLEVAR:                   ' + 'here goes yes/no'
-    c.drawString((0.3)*inch, (6.6)*inch, message)
-    
-    #Second Square
-
-    c.setFont("Helvetica", 14)
-    c.setFillColorRGB(0,0,0)
-    message = 'R.U.C.: ' +'Here egoes the ruc'
-    c.drawString((4.1)*inch, (10.3)*inch, message)
-    c.drawString((4.1)*inch, (10)*inch, 'FACTURA')
-
-    c.setFont("Helvetica", 10)
-    message = 'No.  ' + 'Here goes the No'
-    c.drawString((4.1)*inch, (9.7)*inch, message)
-
-    message = 'NÚMERO DE AUTORIZACIÓN'
-    c.drawString((4.1)*inch, (9.4)*inch, message)
-
-    message = 'here goes autorisation number'
-    c.drawString((4.1)*inch, (9.1)*inch, message)
-
-    message = 'FECHA Y HORA DE'
-    c.drawString((4.1)*inch, (8.8)*inch, message)
-
-    message = 'AUTORIZACIÓN:               ' + 'here goes autorisation date'
-    c.drawString((4.1)*inch, (8.6)*inch, message)
-
-    message = 'AMBIENTE:                        ' + 'here goes the enviroment'
-    c.drawString((4.1)*inch, (8.3)*inch, message)
-
-    message = 'EMISIÓN:                           ' + 'here goes the emision'
-    c.drawString((4.1)*inch, (8.0)*inch, message)
-
-    message = 'CLAVE DE ACCESO'
-    c.drawString((4.1)*inch, (7.7)*inch, message)
-
-    message = 'HERE GOES THE IMAGE'
-    c.drawString((4.1)*inch, (6.9)*inch, message)
-
-    message = 'here goes access password'
-    c.drawString((4.1)*inch, (6.7)*inch, message)
-
-    c.translate(0*inch, 0*inch)
-
-    #Third square
-    
-    c.setFont("Helvetica", 8)
-    c.setFillColorRGB(0,0,0)
-    message = 'Razón Social/Nombres                                  '+'here goes the name'
-    c.drawString((0.3)*inch, (6.3)*inch, message)
-
-    message = 'Identificacion                 '+'here goes the id'
-    c.drawString((0.3)*inch, (6.1)*inch, message)
-
-    message = 'Fecha                            '+'here goes the date'+'                           Placa/Matrícula:                        '+'here goes lisence plate'
-    c.drawString((0.3)*inch, (5.9)*inch, message)
- 
-    message = 'Dirección                       '+'here goes the direction'
-    c.drawString((0.3)*inch, (5.7)*inch, message)
-
-    #products square width = 560
-    
-    p = Paragraph('Cod. Principal', style3)
-    p1 = Paragraph('Cod. Auxiliar', style3)
-    p2 = Paragraph('Cantidad', style3)
-    p3 = Paragraph('Descripción', style3)
-    p4 = Paragraph('Detalle Adicional', style3)
-    p5 = Paragraph('Precio Unitario', style3)
-    p6 = Paragraph('Subsidio', style3)
-    p7 = Paragraph('Precio sin Subsidio', style3)
-    p8 = Paragraph('Descuento', style3)
-    p9 = Paragraph('Precio Total', style3)
-    data = [[p, p1, p2, p3, p4, p5, p6,p7,p8, p9]]
-
-    size = A4
-    print (A4[0])
-
-    # añadir datos = data.append([10,11,12,13,14,15,16,17,18,19])
-    # quitar datos = data.remove(data[0])
-
-    
-    
-
-    #table.wrapOn(c, size[0], size[1])
-    #table.drawOn(c, (0.2)*inch, (4.47)*inch)
-    h = 0
-    contador = 0
-
-    while h < 390:
-        table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
-        contador += 1
-        data.append([10,11,12,13,14,15,16,17,18,contador])
-        table.canv = c
-        w, h = table.wrap(0,0)
-
-
-    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
-    table.wrapOn(c, size[0], size[1])
-
-    table.drawOn(c, (0.2)*inch, (0.0)*inch)
-
-    #print(h*inch)
-    #print(h*mm)
-    #print(h)
-
-    c.showPage()
-    c.translate(0,(0.7)*inch)
-
-    contador2 = 0
-    while h < 750:
-        table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
-        contador2 += 1
-        data.append([10,11,12,13,14,15,16,17,18,contador2])
-        table.canv = c
-        w, h = table.wrap(0,0)
-
-
-    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
-    table.wrapOn(c, size[0], size[1])
-
-    table.drawOn(c, (0.2)*inch, (0.0)*inch)
-    
-    c.save()
-
-    return HttpResponse('DONE')
-
 def downloadeExcel(request):
 
     global fileUploaded, dataDocumentArray
@@ -1769,7 +1509,3 @@ def downloadeExcel(request):
     else:
         return HttpResponse(0)
 
-def path(request):
-    name = filedialog.asksaveasfilename(filetypes = (("Excel files", "*.xlsx"),("All files", "*.*") ))
-    print('nombre: '+ name)
-    return HttpResponse('done')
