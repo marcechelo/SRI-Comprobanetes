@@ -264,7 +264,7 @@ def downloadPdf(request):
 
             for i in dataDocumentArray[1:]:
         
-                arrayData = bodyHeader(i)
+                arrayData = getData(i)
 
                 #Creación del PDF
                 pathDir = dirname + '/'+ i[1] + '.pdf'
@@ -400,7 +400,7 @@ def downloadPdf(request):
                 pagina = 0
 
                 #Iteración del arreglo de datos para llenar la tabla
-                for index, item in enumerate(arrayData[28]):
+                for index, item in enumerate(arrayData[32]):
                     data.append(item)
                     table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
                     table.canv = c
@@ -451,7 +451,7 @@ def downloadPdf(request):
 
                 #Crea la tabla de información adicional
                 p = Paragraph('Información Adicional', style3)
-                p1 = Paragraph(arrayData[29], style4)
+                p1 = Paragraph(arrayData[33], style4)
                 infoAdicionalArray = [[p], [p1]]
                 tableAdicional = Table(infoAdicionalArray, colWidths=[300])
                 tableAdicional.canv = c
@@ -479,33 +479,15 @@ def downloadPdf(request):
                 tablePago.wrapOn(c, size[0], size[1])
 
                 #Crea la tabla de totales
-
-                for item in arrayData[25]:
-                    if item[0] == "iva":
-                        iva = item[1]
-
-                    if item[0] == "subDoce":
-                        subtotal_doce = item[1]
-
-                    if item[0] == "subCero":
-                        subtotal_cero = item[1]
-
-                    if item[0] == "noIva":
-                        noObjetoIva = item[1]
-
-                    if item[0] == "exeIva":
-                        exentoIva = item[1]
-
-
-                arregloTotales = [['SUBTOTAL 12%', subtotal_doce], 
-                                ['SUBTOTAL 0%', subtotal_cero], 
-                                ['SUBTOTAL NO OBJETO DE IVA', noObjetoIva], 
-                                ['SUBTOTAL EXENTO DE IVA', exentoIva],
+                arregloTotales = [['SUBTOTAL 12%', arrayData[26]], 
+                                ['SUBTOTAL 0%', arrayData[27]], 
+                                ['SUBTOTAL NO OBJETO DE IVA', arrayData[28]], 
+                                ['SUBTOTAL EXENTO DE IVA', arrayData[29]],
                                 ['SUBTOTAL SIN IMPUESTOS', arrayData[20]],
                                 ['TOTAL DESCUENTO', arrayData[17]],
-                                ['ICE', arrayData[26]],
-                                ['IVA 12%', iva],
-                                ['IRBPNR', arrayData[27]],
+                                ['ICE', arrayData[30]],
+                                ['IVA 12%', arrayData[25]],
+                                ['IRBPNR', arrayData[31]],
                                 ['PROPINA', arrayData[21]],
                                 ['VALOR TOTAL', arrayData[22]]]
 
@@ -933,7 +915,7 @@ def downloadeExcel(request):
             for i in dataDocumentArray[1:]:
                 count += 1
                 
-                arrayData = bodyHeader(i)
+                arrayData = getData(i)
 
                 worksheet.write('G'+str(count), arrayData[0], data_format)
                 worksheet.write('D'+str(count), arrayData[1], data_format)
@@ -995,7 +977,7 @@ def downloadeExcel(request):
     else:
         return HttpResponse(0)
 
-def bodyHeader(arg):
+def getData(arg):
     
     
     productsLeftStyle = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 7, alignment = TA_LEFT )
@@ -1005,9 +987,12 @@ def bodyHeader(arg):
     datos = []
 
     claveAcceso = ''
+    tipoComp = 0
     if arg[0] == 'Factura':
         claveAcceso = arg[8]
+        tipoComp = 1
     if arg[0] == 'Comprobante de Retención':
+        tipoComp = 2
         claveAcceso = arg[9]
     if arg[0] == 'Notas de Crédito':
         claveAcceso = arg[9]
@@ -1046,11 +1031,10 @@ def bodyHeader(arg):
     if value is not None:
 
         text2 = value.text.replace("&lt;","<")
-        rootFactura = ElementTree.fromstring(text2)
-        detalles = rootFactura.find('detalles')
-        infoTributaria = rootFactura.find('infoTributaria')
-        infoFactura = rootFactura.find('infoFactura')
-        infoAdicional = rootFactura.find('infoAdicional')
+        rootComprobante = ElementTree.fromstring(text2)
+
+        infoTributaria = rootComprobante.find('infoTributaria')
+        infoAdicional = rootComprobante.find('infoAdicional')
 
         if infoTributaria is not None:
 
@@ -1119,268 +1103,359 @@ def bodyHeader(arg):
                 nombreComercial = ''
             datos.append(nombreComercial)
         
-        if infoFactura is not None:
 
-            if infoFactura.find('dirEstablecimiento') is not None:
-                establecimiento = infoFactura.find('dirEstablecimiento').text
-                if establecimiento != dirMatriz:
-                    dirEstablecimiento = infoFactura.find('dirEstablecimiento').text
+        if tipoComp == 1:
+
+            detalles = rootComprobante.find('detalles')
+            infoFactura = rootComprobante.find('infoFactura')
+
+            if infoFactura is not None:
+
+                if infoFactura.find('dirEstablecimiento') is not None:
+                    establecimiento = infoFactura.find('dirEstablecimiento').text
+                    if establecimiento != dirMatriz:
+                        dirEstablecimiento = infoFactura.find('dirEstablecimiento').text
+                    else:
+                        dirEstablecimiento = ''
                 else:
                     dirEstablecimiento = ''
-            else:
-                dirEstablecimiento = ''
-            datos.append(dirEstablecimiento)
+                datos.append(dirEstablecimiento)
 
-            if infoFactura.find('direccionComprador') is not None: 
-                direccionComprador = infoFactura.find('direccionComprador').text
-            else:
-                direccionComprador = ''
-            datos.append(direccionComprador)
+                if infoFactura.find('direccionComprador') is not None: 
+                    direccionComprador = infoFactura.find('direccionComprador').text
+                else:
+                    direccionComprador = ''
+                datos.append(direccionComprador)
 
-            if infoFactura.find('obligadoContabilidad') is not None: 
-                obligadoContabilidad = infoFactura.find('obligadoContabilidad').text
-            else:
-                obligadoContabilidad = ''
-            datos.append(obligadoContabilidad)
+                if infoFactura.find('obligadoContabilidad') is not None: 
+                    obligadoContabilidad = infoFactura.find('obligadoContabilidad').text
+                else:
+                    obligadoContabilidad = ''
+                datos.append(obligadoContabilidad)
 
-            if infoFactura.find('razonSocialComprador') is not None:
-                razonSocialComprador = infoFactura.find('razonSocialComprador').text
-            else:
-                razonSocialComprador = ''
-            datos.append(razonSocialComprador)
+                if infoFactura.find('razonSocialComprador') is not None:
+                    razonSocialComprador = infoFactura.find('razonSocialComprador').text
+                else:
+                    razonSocialComprador = ''
+                datos.append(razonSocialComprador)
 
-            if infoFactura.find('identificacionComprador') is not None: 
-                identificacionComprador = infoFactura.find('identificacionComprador').text
-            else:
-                identificacionComprador = ''
-            datos.append(identificacionComprador)
+                if infoFactura.find('identificacionComprador') is not None: 
+                    identificacionComprador = infoFactura.find('identificacionComprador').text
+                else:
+                    identificacionComprador = ''
+                datos.append(identificacionComprador)
 
-            if infoFactura.find('fechaEmision') is not None:
-                fechaEmision = infoFactura.find('fechaEmision').text
-            else:
-                fechaEmision = ''
-            datos.append(fechaEmision)
+                if infoFactura.find('fechaEmision') is not None:
+                    fechaEmision = infoFactura.find('fechaEmision').text
+                else:
+                    fechaEmision = ''
+                datos.append(fechaEmision)
 
-            if infoFactura.find('totalDescuento') is not None:
-                totalDescuento = "{0:.2f}".format(float(infoFactura.find('totalDescuento').text))
-            else:
-                totalDescuento = '0'
-            datos.append(totalDescuento)
+                if infoFactura.find('totalDescuento') is not None:
+                    totalDescuento = "{0:.2f}".format(float(infoFactura.find('totalDescuento').text))
+                else:
+                    totalDescuento = '0'
+                datos.append(totalDescuento)
 
-            if infoFactura.find('pagos').find('pago').find('formaPago') is not None:
-                formaPagoNumero = int(infoFactura.find('pagos').find('pago').find('formaPago').text)
-                if formaPagoNumero == 1:
-                    formaPago = 'SIN UTILIZACION DEL SISTEMA FINANCIERO'
-                elif formaPagoNumero == 15:
-                    formaPago = 'COMPENSACIÓN DE DEUDAS'
-                elif formaPagoNumero == 16:
-                    formaPago = 'TARJETA DE DÉBITO'
-                elif formaPagoNumero == 17:
-                    formaPago = 'DINERO ELECTRÓNICO'
-                elif formaPagoNumero == 18:
-                    formaPago = 'TARJETA PREPAGO'
-                elif formaPagoNumero == 19:
-                    formaPago = 'TARJETA DE CRÉDITO'
-                elif formaPagoNumero == 20:
-                    formaPago = 'OTROS CON UTILIZACION DEL SISTEMA FINANCIERO'
-                elif formaPagoNumero == 21:
-                    formaPago = 'ENDOSO DE TÍTULOS'
+                if infoFactura.find('pagos').find('pago').find('formaPago') is not None:
+                    formaPagoNumero = int(infoFactura.find('pagos').find('pago').find('formaPago').text)
+                    if formaPagoNumero == 1:
+                        formaPago = 'SIN UTILIZACION DEL SISTEMA FINANCIERO'
+                    elif formaPagoNumero == 15:
+                        formaPago = 'COMPENSACIÓN DE DEUDAS'
+                    elif formaPagoNumero == 16:
+                        formaPago = 'TARJETA DE DÉBITO'
+                    elif formaPagoNumero == 17:
+                        formaPago = 'DINERO ELECTRÓNICO'
+                    elif formaPagoNumero == 18:
+                        formaPago = 'TARJETA PREPAGO'
+                    elif formaPagoNumero == 19:
+                        formaPago = 'TARJETA DE CRÉDITO'
+                    elif formaPagoNumero == 20:
+                        formaPago = 'OTROS CON UTILIZACION DEL SISTEMA FINANCIERO'
+                    elif formaPagoNumero == 21:
+                        formaPago = 'ENDOSO DE TÍTULOS'
+                    else:
+                        formaPago = ''
                 else:
                     formaPago = ''
-            else:
-                formaPago = ''
-            datos.append(formaPago)
+                datos.append(formaPago)
 
-            if infoFactura.find('pagos').find('pago').find('total') is not None:
-                total0 = float(infoFactura.find('pagos').find('pago').find('total').text)
-                total ="{0:.2f}".format(total0)
-            else:
-                total = '0'
-            datos.append(total)
+                if infoFactura.find('pagos').find('pago').find('total') is not None:
+                    total0 = float(infoFactura.find('pagos').find('pago').find('total').text)
+                    total ="{0:.2f}".format(total0)
+                else:
+                    total = '0'
+                datos.append(total)
 
-            if infoFactura.find('totalSinImpuestos') is not None:
-                    totalSinImpuestos = "{0:.2f}".format(float(infoFactura.find('totalSinImpuestos').text))
-            else:
-                totalSinImpuestos = '0'
-            datos.append(totalSinImpuestos)
+                if infoFactura.find('totalSinImpuestos') is not None:
+                        totalSinImpuestos = "{0:.2f}".format(float(infoFactura.find('totalSinImpuestos').text))
+                else:
+                    totalSinImpuestos = '0'
+                datos.append(totalSinImpuestos)
 
-            if infoFactura.find('propina') is not None:
-                propina = "{0:.2f}".format(float(infoFactura.find('propina').text))
-            else:
-                propina = '0.00'
-            datos.append(propina)
+                if infoFactura.find('propina') is not None:
+                    propina = "{0:.2f}".format(float(infoFactura.find('propina').text))
+                else:
+                    propina = '0.00'
+                datos.append(propina)
 
-            if infoFactura.find('importeTotal') is not None:
-                importeTotal = "{0:.2f}".format(float(infoFactura.find('importeTotal').text))
-            else:
-                importeTotal = '0.00'
-            datos.append(importeTotal)
+                if infoFactura.find('importeTotal') is not None:
+                    importeTotal = "{0:.2f}".format(float(infoFactura.find('importeTotal').text))
+                else:
+                    importeTotal = '0.00'
+                datos.append(importeTotal)
 
-            if infoFactura.find('totalSubsidio') is not None:
-                totalSubsidio = "{0:.2f}".format(float(infoFactura.find('totalSubsidio').text))
-            else:
-                totalSubsidio = '0.00'
-            datos.append(totalSubsidio)
+                if infoFactura.find('totalSubsidio') is not None:
+                    totalSubsidio = "{0:.2f}".format(float(infoFactura.find('totalSubsidio').text))
+                else:
+                    totalSubsidio = '0.00'
+                datos.append(totalSubsidio)
 
-            valorSinSubsidio = float(importeTotal) - float(totalSubsidio)
-            datos.append(valorSinSubsidio)
+                valorSinSubsidio = float(importeTotal) - float(totalSubsidio)
+                datos.append(valorSinSubsidio)
 
-            if infoFactura.find('totalConImpuestos') is not None:
-                countIce = 0
-                countIRBPNR = 0
-                arregloImpuesto = []
-                for totalImpuesto in infoFactura.find('totalConImpuestos').findall('totalImpuesto'):
-                    if totalImpuesto.find('codigo') is not None:
-                        
-                        if int(totalImpuesto.find('codigo').text) == 2: 
+                if infoFactura.find('totalConImpuestos') is not None:
+                    countIce = 0
+                    countIRBPNR = 0                    
+                    countIva = 0
+                    countIvaCero = 0
+                    countNoIva = 0
+                    countExeIva = 0
+                    arregloImpuesto = []
+
+                    for totalImpuesto in infoFactura.find('totalConImpuestos').findall('totalImpuesto'):
+                        if totalImpuesto.find('codigo') is not None:
                             
-                            # iva 12%
-                            if int(totalImpuesto.find('codigoPorcentaje').text) == 2:    
-                                iva = "{0:.2f}".format(float(totalImpuesto.find('valor').text))
-                                baseImponible = totalImpuesto.find('baseImponible').text
-                                subtotal_doce = "{0:.2f}".format(float(iva) + float(baseImponible))
-                            else:
-                                iva = '0.00'
-                                subtotal_doce = '0.00'
-                            tuplaIva = ("iva", iva)
-                            tuplaSubDoce = ("subDoce", subtotal_doce)
-                            arregloImpuesto.append(tuplaIva)
-                            arregloImpuesto.append(tuplaSubDoce)
+                            if int(totalImpuesto.find('codigo').text) == 2: 
+                                
+                                # iva 12%
+                                if int(totalImpuesto.find('codigoPorcentaje').text) == 2:    
+                                    iva = "{0:.2f}".format(float(totalImpuesto.find('valor').text))
+                                    baseImponible = totalImpuesto.find('baseImponible').text
+                                    subtotal_doce = "{0:.2f}".format(float(iva) + float(baseImponible))
+                                    countIva += 1
+
+                                # iva 0%
+                                if int(totalImpuesto.find('codigoPorcentaje').text) == 0:    
+                                    subtotal_cero = "{0:.2f}".format(float(totalImpuesto.find('baseImponible').text))
+                                    countIvaCero += 1
+
+                                # no objeto de iva
+                                if int(totalImpuesto.find('codigoPorcentaje').text) == 6:
+                                    noObjetoIva = "{0:.2f}".format(float(totalImpuesto.find('baseImponible').text))
+                                    countNoIva += 1
+                                
+                                # exento de iva
+                                if int(totalImpuesto.find('codigoPorcentaje').text) == 7:
+                                    exentoIva = totalImpuesto.find('baseImponible').text
+                                    countExeIva += 1
+
+                            if (int(totalImpuesto.find('codigo').text) == 3 ):
+                                ice = "{0:.2f}".format(float(totalImpuesto.find('valor').text))
+                                countIce +=1
                             
-                            # iva 0%
-                            if int(totalImpuesto.find('codigoPorcentaje').text) == 0:    
-                                subtotal_cero = "{0:.2f}".format(float(totalImpuesto.find('baseImponible').text))
-                            else:
-                                subtotal_cero = '0.00'
-                            tuplaSubCero = ("subCero", subtotal_cero)
-                            arregloImpuesto.append(tuplaSubCero)
+                            if int(totalImpuesto.find('codigo').text) == 5:
+                                IRBPNR = totalImpuesto.find('valor').text
+                                countIRBPNR += 1
+                    
+                    #datos.append(arregloImpuesto)
 
-                            # no objeto de iva
-                            if int(totalImpuesto.find('codigoPorcentaje').text) == 6:
-                                noObjetoIva = "{0:.2f}".format(float(totalImpuesto.find('baseImponible').text))
-                            else:
-                                noObjetoIva = '0.00'
-                            tuplaNoIva = ("noIva", noObjetoIva)
-                            arregloImpuesto.append(tuplaNoIva)
-                            
-                            # exento de iva
-                            if int(totalImpuesto.find('codigoPorcentaje').text) == 7:
-                                exentoIva = totalImpuesto.find('baseImponible').text
-                            else:
-                                exentoIva = '0.00'
-                            tuplaExeIva = ("exeIva", exentoIva)
-                            arregloImpuesto.append(tuplaExeIva)
+                    if countIva == 0:
+                        iva = '0.00'
+                        subtotal_doce = '0.00'
+                    datos.append(iva)
+                    datos.append(subtotal_doce)
 
-                        if (int(totalImpuesto.find('codigo').text) == 3 ):
-                            ice = "{0:.2f}".format(float(totalImpuesto.find('valor').text))
-                            countIce +=1
-                        
-                        if int(totalImpuesto.find('codigo').text) == 5:
-                            IRBPNR = totalImpuesto.find('valor').text
-                            countIRBPNR += 1
-                
-                datos.append(arregloImpuesto)
-                
-                if countIce == 0:
-                    ice = '0.00'
-                datos.append(ice)
-                
-                if countIRBPNR == 0:
-                    IRBPNR = '0.00'
-                datos.append(IRBPNR)
+                    if countIvaCero == 0:
+                        subtotal_cero = '0.00'
+                    datos.append(subtotal_cero)
 
-        if detalles is not None:
+                    if countNoIva == 0:
+                        noObjetoIva = '0.00'
+                    datos.append(noObjetoIva)
+
+                    if countExeIva == 0:
+                        exentoIva = '0.00'
+                    datos.append(exentoIva)
+
+                    if countIce == 0:
+                        ice = '0.00'
+                    datos.append(ice)
+                    
+                    if countIRBPNR == 0:
+                        IRBPNR = '0.00'
+                    datos.append(IRBPNR)
+
+            if detalles is not None:
+                
+                detalleArray = []
+                contadorDetalles = 0
+                
+                for child in detalles.findall('detalle'):
+                    contadorDetalles += 1
+                    detalleAd = ''
+                    detallesArray = []
+
+                    if child.find('codigoPrincipal') is not None:
+                        codigoPrincipal = child.find('codigoPrincipal').text
+                    else:
+                        codigoPrincipal = ''
+                    detalle1 = Paragraph(codigoPrincipal, productsCenterStyle)
+
+                    if child.find('codigoAuxiliar') is not None:
+                        codigoAuxiliar = child.find('codigoAuxiliar').text
+                    else:
+                        codigoAuxiliar = ''
+                    detalle2 = Paragraph(codigoAuxiliar, productsCenterStyle)
+
+                    if child.find('cantidad') is not None:
+                        can = float(child.find('cantidad').text)
+                        cantidad = "{0:.2f}".format(can)
+                    else:
+                        cantidad = '0'
+                    detalle3 = Paragraph(cantidad, productsCenterStyle)
+
+                    if child.find('descripcion') is not None:
+                        descripcion = child.find('descripcion').text
+                    else:
+                        descripcion = ''
+                    detalle4 = Paragraph(descripcion, productsLeftStyle)
+
+                    if child.find('detallesAdicionales') is not None:
+                        for child2 in child.find('detallesAdicionales').findall('detAdicional'):
+                            if child2 is not None:
+                                nombre = child2.get('nombre')
+                                valor = child2.get('valor=')
+                                detalleAd += str(nombre) + ':   '+ str(valor) +'\n'
+                    
+                    detalle5 = Paragraph(detalleAd, productsLeftStyle)
+
+                    if child.find('precioUnitario') is not None:
+                        precUni = float(child.find('precioUnitario').text)
+                        precioUnitario = "{0:.2f}".format(precUni)
+                    else:
+                        precioUnitario = '0.00'
+                    detalle6 = Paragraph(precioUnitario, productosRightStyle) 
+
+                    if child.find('precioSinSubsidio') is not None:
+                        precioSinSub = float(child.find('precioSinSubsidio').text)
+                        precioSinSubsidio = "{0:.2f}".format(precioSinSub)
+                    else:
+                        precioSinSubsidio = '0.00' 
+                    detalle8 = Paragraph(precioSinSubsidio, productosRightStyle)
+
+                    if float(precioSinSubsidio) == 0.00:
+                        subsidio = '0.00'
+                    else:
+                        subsidio = "{0:.2f}".format(float(precioSinSubsidio) - float(precioTotalSinImpuesto))
+                    detalle7 = Paragraph(subsidio, productosRightStyle)                         
+                    
+                    if child.find('descuento') is not None:
+                        descue = float(child.find('descuento').text)
+                        descuento = "{0:.2f}".format(descue)
+                    else:
+                        descuento = ''
+                    detalle9 = Paragraph(descuento, productosRightStyle)
+
+                    if child.find('precioTotalSinImpuesto') is not None:
+                        precioTotalSinIm = float(child.find('precioTotalSinImpuesto').text)
+                        precioTotalSinImpuesto = "{0:.2f}".format(precioTotalSinIm)
+                    else:
+                        precioTotalSinImpuesto = '0.00'
+                    detalle10 = Paragraph(precioTotalSinImpuesto, productosRightStyle)
+
+                    detallesArray.append(detalle1)
+                    detallesArray.append(detalle2)
+                    detallesArray.append(detalle3)
+                    detallesArray.append(detalle4)
+                    detallesArray.append(detalle5)
+                    detallesArray.append(detalle6)
+                    detallesArray.append(detalle7)
+                    detallesArray.append(detalle8)
+                    detallesArray.append(detalle9)
+                    detallesArray.append(detalle10)
+                    detalleArray.append(detallesArray)
             
-            detalleArray = []
-            contadorDetalles = 0
+                datos.append(detalleArray)
             
-            for child in detalles.findall('detalle'):
-                contadorDetalles += 1
-                detalleAd = ''
-                detallesArray = []
 
-                if child.find('codigoPrincipal') is not None:
-                    codigoPrincipal = child.find('codigoPrincipal').text
-                else:
-                    codigoPrincipal = ''
-                detalle1 = Paragraph(codigoPrincipal, productsCenterStyle)
+        if tipoComp == 2: 
 
-                if child.find('codigoAuxiliar') is not None:
-                    codigoAuxiliar = child.find('codigoAuxiliar').text
-                else:
-                    codigoAuxiliar = ''
-                detalle2 = Paragraph(codigoAuxiliar, productsCenterStyle)
+            infoCompRetencion = rootComprobante.find('infoCompRetencion')
+            impuestos = rootComprobante.find('impuestos')
 
-                if child.find('cantidad') is not None:
-                    can = float(child.find('cantidad').text)
-                    cantidad = "{0:.2f}".format(can)
-                else:
-                    cantidad = '0'
-                detalle3 = Paragraph(cantidad, productsCenterStyle)
-
-                if child.find('descripcion') is not None:
-                    descripcion = child.find('descripcion').text
-                else:
-                    descripcion = ''
-                detalle4 = Paragraph(descripcion, productsLeftStyle)
-
-                if child.find('detallesAdicionales') is not None:
-                    for child2 in child.find('detallesAdicionales').findall('detAdicional'):
-                        if child2 is not None:
-                            nombre = child2.get('nombre')
-                            valor = child2.get('valor=')
-                            detalleAd += str(nombre) + ':   '+ str(valor) +'\n'
+            if infoCompRetencion is not None:
                 
-                detalle5 = Paragraph(detalleAd, productsLeftStyle)
-
-                if child.find('precioUnitario') is not None:
-                    precUni = float(child.find('precioUnitario').text)
-                    precioUnitario = "{0:.2f}".format(precUni)
+                if infoCompRetencion.find('fechaEmision') is not None: 
+                    fechaEmision = infoCompRetencion.find('fechaEmision').text
                 else:
-                    precioUnitario = '0.00'
-                detalle6 = Paragraph(precioUnitario, productosRightStyle) 
-
-                if child.find('precioSinSubsidio') is not None:
-                    precioSinSub = float(child.find('precioSinSubsidio').text)
-                    precioSinSubsidio = "{0:.2f}".format(precioSinSub)
-                else:
-                    precioSinSubsidio = '0.00' 
-                detalle8 = Paragraph(precioSinSubsidio, productosRightStyle)
-
-                if float(precioSinSubsidio) == 0.00:
-                    subsidio = '0.00'
-                else:
-                    subsidio = "{0:.2f}".format(float(precioSinSubsidio) - float(precioTotalSinImpuesto))
-                detalle7 = Paragraph(subsidio, productosRightStyle)                         
+                    fechaEmision = ''
                 
-                if child.find('descuento') is not None:
-                    descue = float(child.find('descuento').text)
-                    descuento = "{0:.2f}".format(descue)
+                if infoCompRetencion.find('razonSocialSujetoRetenido') is not None: 
+                    razonSocialSujetoRetenido = infoCompRetencion.find('razonSocialSujetoRetenido').text
                 else:
-                    descuento = ''
-                detalle9 = Paragraph(descuento, productosRightStyle)
-
-                if child.find('precioTotalSinImpuesto') is not None:
-                    precioTotalSinIm = float(child.find('precioTotalSinImpuesto').text)
-                    precioTotalSinImpuesto = "{0:.2f}".format(precioTotalSinIm)
+                    razonSocialSujetoRetenido = ''
+                
+                if infoCompRetencion.find('identificacionSujetoRetenido') is not None: 
+                    identificacionSujetoRetenido = infoCompRetencion.find('identificacionSujetoRetenido').text
                 else:
-                    precioTotalSinImpuesto = '0.00'
-                detalle10 = Paragraph(precioTotalSinImpuesto, productosRightStyle)
+                    identificacionSujetoRetenido = ''
+                    
 
-                detallesArray.append(detalle1)
-                detallesArray.append(detalle2)
-                detallesArray.append(detalle3)
-                detallesArray.append(detalle4)
-                detallesArray.append(detalle5)
-                detallesArray.append(detalle6)
-                detallesArray.append(detalle7)
-                detallesArray.append(detalle8)
-                detallesArray.append(detalle9)
-                detallesArray.append(detalle10)
-                detalleArray.append(detallesArray)
-        
-        datos.append(detalleArray)
-        
+            if impuestos is not None:
+
+                for child in impuestos.findall('impuesto'):
+
+                    if child.find('codDocSustento') is not None:
+                        codDocSustento = child.find('codDocSustento').text
+                    else:
+                        codDocSustento = ''
+                    
+                    if child.find('numDocSustento') is not None:
+                        numDocSustento = child.find('numDocSustento').text
+                    else:
+                        numDocSustento = ''
+                    
+                    if child.find('fechaEmisionDocSustento') is not None:
+                        fechaEmisionDocSustento = child.find('fechaEmisionDocSustento').text
+                    else:
+                        fechaEmisionDocSustento = ''
+                    
+                    # Ejercicio fiscal -> revisar
+                    #if child.find('codDocSustento') is not None:
+                    #    codDocSustento = child.find('codDocSustento').text
+                    #else:
+                    #    codDocSustento = ''
+                    
+                    if child.find('baseImponible') is not None:
+                        baseImponible = child.find('baseImponible').text
+                    else:
+                        baseImponible = ''
+                    
+                    if child.find('codigo') is not None:
+                        codigoNum = int(child.find('codigo').text)
+                        if codigoNum == 1:
+                            codigo = 'RENTA'
+                        if codigoNum == 2:
+                            codigo = 'IVA'
+                        if codigoNum == 6:
+                            codigo = 'ISD'
+                        else:
+                            codigo = ''
+                    else:
+                        codigo = ''
+                    
+                    if child.find('porcentajeRetener') is not None:
+                        porcentajeRetener = child.find('porcentajeRetener').text
+                    else:
+                        porcentajeRetener = ''
+                    
+                    if child.find('valorRetenido') is not None:
+                        valorRetenido = child.find('valorRetenido').text
+                    else:
+                        valorRetenido = ''
+
         if infoAdicional is not None:
             adicional = ''
             for campoAdicional in infoAdicional.findall('campoAdicional'):
@@ -1403,3 +1478,4 @@ def bodyHeader2(arg):
     body += "</Envelope>"
     r = requests.post(url="https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl", data=body, headers=headers)
     return (r.text)
+
