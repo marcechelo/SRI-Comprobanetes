@@ -5,8 +5,6 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views import generic
 from django.views.generic import TemplateView
-from fpdf import FPDF
-from win32com import client
 from datetime import datetime
 
 from reportlab.lib import colors
@@ -61,6 +59,7 @@ fileUploaded = None
 dataDocumentArray = []
 tipoComprobanete = 'recibido'
 file = None
+comprobanteType = ''
 
 def index(request):
     context = {'message': 'Hello world!', 'second': 'message 2!'}
@@ -144,7 +143,7 @@ def get_xml_sri(auth_number):
 
 def test(request):
 
-    global fileUploaded, dataDocumentArray, file
+    global fileUploaded, dataDocumentArray, file, comprobanteType
 
     if request.method == 'POST' and len(request.FILES) != 0:
 
@@ -177,6 +176,8 @@ def test(request):
             newArray.append(item)
 
         context = {'comprobantes_data': newArray, 'arreglo': document_array}
+        comprobanteType = newArray[0][0]
+        print(comprobanteType)
 
         # print(aux2)
         # uglyxml = '<?xml version="1.0" encoding="UTF-8" ?><employees><employee><Name>Leonardo DiCaprio</Name></employee></employees>'
@@ -451,7 +452,7 @@ def downloadPdf(request):
 
                 #Crea la tabla de información adicional
                 p = Paragraph('Información Adicional', style3)
-                p1 = Paragraph(arrayData[33], style4)
+                p1 = Paragraph(arrayData[34], style4)
                 infoAdicionalArray = [[p], [p1]]
                 tableAdicional = Table(infoAdicionalArray, colWidths=[300])
                 tableAdicional.canv = c
@@ -830,7 +831,7 @@ def comprobantesEmitidos(request):
 
 def downloadeExcel(request):
 
-    global fileUploaded, dataDocumentArray
+    global fileUploaded, dataDocumentArray, comprobanteType
 
     if len(dataDocumentArray) != 0 :
         
@@ -858,19 +859,11 @@ def downloadeExcel(request):
             worksheet.set_column('G:G',30)
             worksheet.set_column('H:J',30)
             worksheet.set_column('K:K',20)
-            worksheet.set_column('L:L',30)
-            worksheet.set_column('M:M',20)
-            worksheet.set_column('N:N',10)
-            worksheet.set_column('O:O',30)
-            worksheet.set_column('P:AB',15)
-            worksheet.set_column('AC:AC',30)
-            worksheet.set_column('AD:AE',30)
+
 
             #Tipo de campos
-            worksheet.merge_range('A1:K1', 'Información Empresa', merge_format)
-            worksheet.merge_range('L1:AB1', 'Información Factura', merge_format)
-            worksheet.write('AC1', 'Información Adicional', merge_format)
-            worksheet.merge_range('AD1:AE1', 'Forma de Pago', merge_format)
+            worksheet.merge_range('A1:K1', 'Información Tributaria', merge_format)
+            
 
             #Capos descripcion
             worksheet.write('A2', 'Tipo de Comprobante', titles_format) 
@@ -884,89 +877,116 @@ def downloadeExcel(request):
             worksheet.write('I2', 'Dirección Matriz', titles_format)
             worksheet.write('J2', 'Dirección Sucursal', titles_format)
             worksheet.write('K2', 'Obligado a Llevar', titles_format)
+
+            if comprobanteType == 'Factura':
+                
+                #Tamaños columnas
+                worksheet.set_column('L:L',30)
+                worksheet.set_column('M:M',20)
+                worksheet.set_column('N:N',10)
+                worksheet.set_column('O:O',30)
+                worksheet.set_column('P:AB',15)
+                worksheet.set_column('AC:AC',30)
+                worksheet.set_column('AD:AE',30)
+
+                #Tipo de Campos
+                worksheet.merge_range('L1:AB1', 'Información Factura', merge_format)
+                worksheet.write('AC1', 'Información Adicional', merge_format)
+                worksheet.merge_range('AD1:AE1', 'Forma de Pago', merge_format)
+
+                #Campos descripcion
+                worksheet.write('L2', 'Razón Social/Nombre', titles_format)
+                worksheet.write('M2', 'Identificación', titles_format)
+                worksheet.write('N2', 'Fecha', titles_format)
+                worksheet.write('O2', 'Dirección', titles_format)
+                worksheet.write('P2', 'Subtotal 12%', titles_format)
+                worksheet.write('Q2', 'Subtotal 0%', titles_format)
+                worksheet.write('R2', 'Subtotal No Objeto de I.V.A', titles_format)
+                worksheet.write('S2', 'Subtotal Exento I.V.A', titles_format)
+                worksheet.write('T2', 'Subtotal Sin Impuestos', titles_format)
+                worksheet.write('U2', 'Total Descuento', titles_format)
+                worksheet.write('V2', 'ICE', titles_format)
+                worksheet.write('W2', 'IVA 12%', titles_format)
+                worksheet.write('X2', 'IRBPNR', titles_format)
+                worksheet.write('Y2', 'Propina', titles_format)
+                worksheet.write('Z2', 'Valor Total', titles_format)
+                worksheet.write('AA2', 'Valor Total Sin Subsidio', titles_format)
+                worksheet.write('AB2', 'Ahorro por Subsidio', titles_format)
+
+                worksheet.write('AC2', 'Información Adicional', titles_format)
+
+                worksheet.write('AD2', 'Forma de Pago', titles_format)
+                worksheet.write('AE2', 'Valor', titles_format)
+
+            if comprobanteType == 'Comprobante de Retención':
+                
+                #Tamaños columnas
+                worksheet.set_column('L:L',20)
+                worksheet.set_column('M:M',30)
+                worksheet.set_column('N:N',20)
+                worksheet.set_column('O:O',30)
+
+                #Tipo de Campos
+                worksheet.merge_range('L1:N1', 'Información Retención', merge_format)
+                worksheet.write('O1', 'Información Adicional', merge_format)
+
+                #Campos decripcion
+                worksheet.write('L2', 'Fecha Emisión', titles_format)
+                worksheet.write('M2', 'Razón Social / Nombres y Apellidos', titles_format)
+                worksheet.write('N2', 'Identificación', titles_format)
+                worksheet.write('O2', 'Información Adicional', titles_format)
             
-            worksheet.write('L2', 'Razón Social/Nombre', titles_format)
-            worksheet.write('M2', 'Identificación', titles_format)
-            worksheet.write('N2', 'Fecha', titles_format)
-            worksheet.write('O2', 'Dirección', titles_format)
-            worksheet.write('P2', 'Subtotal 12%', titles_format)
-            worksheet.write('Q2', 'Subtotal 0%', titles_format)
-            worksheet.write('R2', 'Subtotal No Objeto de I.V.A', titles_format)
-            worksheet.write('S2', 'Subtotal Exento I.V.A', titles_format)
-            worksheet.write('T2', 'Subtotal Sin Impuestos', titles_format)
-            worksheet.write('U2', 'Total Descuento', titles_format)
-            worksheet.write('V2', 'ICE', titles_format)
-            worksheet.write('W2', 'IVA 12%', titles_format)
-            worksheet.write('X2', 'IRBPNR', titles_format)
-            worksheet.write('Y2', 'Propina', titles_format)
-            worksheet.write('Z2', 'Valor Total', titles_format)
-            worksheet.write('AA2', 'Valor Total Sin Subsidio', titles_format)
-            worksheet.write('AB2', 'Ahorro por Subsidio', titles_format)
-
-            worksheet.write('AC2', 'Información Adicional', titles_format)
-
-            worksheet.write('AD2', 'Forma de Pago', titles_format)
-            worksheet.write('AE2', 'Valor', titles_format)
-
-            #Extraer datos
 
             count = 2
 
             for i in dataDocumentArray[1:]:
-                count += 1
                 
+                count += 1
                 arrayData = getData(i)
 
-                worksheet.write('G'+str(count), arrayData[0], data_format)
+                worksheet.write('A'+str(count), arrayData[8], data_format)
+                worksheet.write('B'+str(count), arrayData[6], data_format)
+                worksheet.write('C'+str(count), arrayData[9], data_format)
                 worksheet.write('D'+str(count), arrayData[1], data_format)
                 worksheet.write('E'+str(count), arrayData[2], data_format)
                 worksheet.write('F'+str(count), arrayData[5], data_format)
-                worksheet.write('B'+str(count), arrayData[6], data_format) 
+                worksheet.write('G'+str(count), arrayData[0], data_format)
                 worksheet.write('H'+str(count), arrayData[3], data_format)
-                worksheet.write('I'+str(count), arrayData[4], data_format)
-                worksheet.write('C'+str(count), arrayData[9] , data_format)    
-                worksheet.write('A'+str(count), arrayData[8], data_format)   
-                worksheet.write('J'+str(count), arrayData[11], data_format)
-                worksheet.write('O'+str(count), arrayData[12], data_format)
-                worksheet.write('K'+str(count), arrayData[13], data_format)
-                worksheet.write('L'+str(count), arrayData[14], data_format)
-                worksheet.write('M'+str(count), arrayData[15], data_format)
-                worksheet.write('N'+str(count), arrayData[16], data_format)
-                worksheet.write('U'+str(count), arrayData[17], data_format)
-                worksheet.write('AD'+str(count), arrayData[18], data_format)
-                worksheet.write('AE'+str(count), arrayData[19], data_format)
-                worksheet.write('T'+str(count), arrayData[20], data_format)
-                worksheet.write('Y'+str(count), arrayData[21], data_format)
-                worksheet.write('Z'+str(count), arrayData[22], data_format)
-                worksheet.write('AB'+str(count), arrayData[23], data_format)
-                worksheet.write('AA'+str(count), arrayData[24], data_format)
+                worksheet.write('I'+str(count), arrayData[4], data_format)   
 
-                
-
-                for item in arrayData[25]:
-                    if item[0] == "iva":
-                        iva = item[1]
-
-                    if item[0] == "subDoce":
-                        subtotal_doce = item[1]
-
-                    if item[0] == "subCero":
-                        subtotal_cero = item[1]
-
-                    if item[0] == "noIva":
-                        noObjetoIva = item[1]
-
-                    if item[0] == "exeIva":
-                        exentoIva = item[1]
+                if i[0] == 'Factura':
                     
-                worksheet.write('P'+str(count), subtotal_doce, data_format)
-                worksheet.write('W'+str(count), iva, data_format)
-                worksheet.write('Q'+str(count), subtotal_cero, data_format)
-                worksheet.write('R'+str(count), noObjetoIva, data_format)
-                worksheet.write('S'+str(count), exentoIva, data_format)
-                worksheet.write('V'+str(count), arrayData[26], data_format)
-                worksheet.write('X'+str(count), arrayData[27], data_format)
-                worksheet.write('AC'+str(count), arrayData[29], data_format)
+                    worksheet.write('J'+str(count), arrayData[11], data_format)
+                    worksheet.write('O'+str(count), arrayData[12], data_format)
+                    worksheet.write('K'+str(count), arrayData[13], data_format)
+                    worksheet.write('L'+str(count), arrayData[14], data_format)
+                    worksheet.write('M'+str(count), arrayData[15], data_format)
+                    worksheet.write('N'+str(count), arrayData[16], data_format)
+                    worksheet.write('U'+str(count), arrayData[17], data_format)
+                    worksheet.write('AD'+str(count), arrayData[18], data_format)
+                    worksheet.write('AE'+str(count), arrayData[19], data_format)
+                    worksheet.write('T'+str(count), arrayData[20], data_format)
+                    worksheet.write('Y'+str(count), arrayData[21], data_format)
+                    worksheet.write('Z'+str(count), arrayData[22], data_format)
+                    worksheet.write('AB'+str(count), arrayData[23], data_format)
+                    worksheet.write('AA'+str(count), arrayData[24], data_format)
+                    worksheet.write('P'+str(count),  arrayData[26], data_format)
+                    worksheet.write('W'+str(count),  arrayData[25], data_format)
+                    worksheet.write('Q'+str(count),  arrayData[27], data_format)
+                    worksheet.write('R'+str(count),  arrayData[28], data_format)
+                    worksheet.write('S'+str(count),  arrayData[29], data_format)
+                    worksheet.write('V'+str(count), arrayData[30], data_format)
+                    worksheet.write('X'+str(count), arrayData[31], data_format)
+                    worksheet.write('AC'+str(count), arrayData[33], data_format)
+                    
+                if i[0] == 'Comprobante de Retención':
+                    
+                    worksheet.write('J'+str(count), arrayData[14], data_format)
+                    worksheet.write('L'+str(count), arrayData[11], data_format)
+                    worksheet.write('M'+str(count), arrayData[12], data_format)
+                    worksheet.write('K'+str(count), arrayData[13], data_format)
+                    worksheet.write('N'+str(count), arrayData[15], data_format)
+                    worksheet.write('O'+str(count), arrayData[17], data_format)
 
             workbook.close()
 
@@ -1391,36 +1411,81 @@ def getData(arg):
                     fechaEmision = infoCompRetencion.find('fechaEmision').text
                 else:
                     fechaEmision = ''
+                datos.append(fechaEmision)
                 
                 if infoCompRetencion.find('razonSocialSujetoRetenido') is not None: 
                     razonSocialSujetoRetenido = infoCompRetencion.find('razonSocialSujetoRetenido').text
                 else:
                     razonSocialSujetoRetenido = ''
+                datos.append(razonSocialSujetoRetenido)
+
+                if infoCompRetencion.find('obligadoContabilidad') is not None: 
+                    obligadoContabilidad = infoCompRetencion.find('obligadoContabilidad').text
+                else:
+                    obligadoContabilidad = ''
+                datos.append(obligadoContabilidad)
+
+                if infoCompRetencion.find('dirEstablecimiento') is not None:
+                    establecimiento = infoCompRetencion.find('dirEstablecimiento').text
+                    if establecimiento != dirMatriz:
+                        dirEstablecimiento = infoCompRetencion.find('dirEstablecimiento').text
+                    else:
+                        dirEstablecimiento = ''
+                else:
+                    dirEstablecimiento = ''
+                datos.append(dirEstablecimiento)
                 
                 if infoCompRetencion.find('identificacionSujetoRetenido') is not None: 
                     identificacionSujetoRetenido = infoCompRetencion.find('identificacionSujetoRetenido').text
                 else:
                     identificacionSujetoRetenido = ''
+                datos.append(identificacionSujetoRetenido)
                     
-
             if impuestos is not None:
+
+                arrayImpuestos = []
 
                 for child in impuestos.findall('impuesto'):
 
+                    arrayImpuesto = []
+
                     if child.find('codDocSustento') is not None:
-                        codDocSustento = child.find('codDocSustento').text
+                        codDocSustentoNum = int(child.find('codDocSustento').text)
+                        if codDocSustentoNum == 1:
+                            codDocSustento = 'FACTURA'
+                        if codDocSustentoNum == 2:
+                            codDocSustento = 'NOTA O BOLETA DE VENTA'
+                        if codDocSustentoNum == 3:
+                            codDocSustento = 'LIQUIDACIÓN DE COMPRA'
+                        if codDocSustentoNum == 4:
+                            codDocSustento = 'NOTA DE CRÉDITO'
+                        if codDocSustentoNum == 5:
+                            codDocSustento = 'NOTA DE DÉBITO   '
+                        if codDocSustentoNum == 6:
+                            codDocSustento = 'GUÍA DE REMISIÓN'
+                        if codDocSustentoNum == 7:
+                            codDocSustento = 'COMPROBANTE DE RETENCIÓN'
+                        if codDocSustentoNum == 8:
+                            codDocSustento = 'BOLETOS ESPECTÁCULOS PÚBLICOS'
+                        if codDocSustentoNum == 9:
+                            codDocSustento = 'TIQUETES DE MÁQ. REGISTRADORAS'
+                        else:
+                            codDocSustento = ''
                     else:
                         codDocSustento = ''
+                    arrayImpuesto.append(codDocSustento)
                     
                     if child.find('numDocSustento') is not None:
                         numDocSustento = child.find('numDocSustento').text
                     else:
                         numDocSustento = ''
+                    arrayImpuesto.append(numDocSustento)
                     
                     if child.find('fechaEmisionDocSustento') is not None:
                         fechaEmisionDocSustento = child.find('fechaEmisionDocSustento').text
                     else:
                         fechaEmisionDocSustento = ''
+                    arrayImpuesto.append(fechaEmisionDocSustento)
                     
                     # Ejercicio fiscal -> revisar
                     #if child.find('codDocSustento') is not None:
@@ -1432,6 +1497,7 @@ def getData(arg):
                         baseImponible = child.find('baseImponible').text
                     else:
                         baseImponible = ''
+                    arrayImpuesto.append(baseImponible)
                     
                     if child.find('codigo') is not None:
                         codigoNum = int(child.find('codigo').text)
@@ -1445,24 +1511,36 @@ def getData(arg):
                             codigo = ''
                     else:
                         codigo = ''
+                    arrayImpuesto.append(codigo)
                     
                     if child.find('porcentajeRetener') is not None:
                         porcentajeRetener = child.find('porcentajeRetener').text
                     else:
                         porcentajeRetener = ''
+                    arrayImpuesto.append(porcentajeRetener)
                     
                     if child.find('valorRetenido') is not None:
                         valorRetenido = child.find('valorRetenido').text
                     else:
                         valorRetenido = ''
+                    arrayImpuesto.append(valorRetenido)
+
+                    arrayImpuestos.append(arrayImpuesto)
+                
+                datos.append(arrayImpuestos)
 
         if infoAdicional is not None:
-            adicional = ''
+            adicionalPdf = ''
+            adicionalExcel = ''
             for campoAdicional in infoAdicional.findall('campoAdicional'):
-                adicional += campoAdicional.get('nombre') + ':  ' + campoAdicional.text + '<br />\n'
+                adicionalExcel += campoAdicional.get('nombre') + ':  ' + campoAdicional.text #+ '<br />\n'
+                adicionalPdf += campoAdicional.get('nombre') + ':  ' + campoAdicional.text + '<br />\n'
         else:
-            adicional = ''
-        datos.append(adicional)
+            adicionalPdf = ''
+            adicionalExcel = ''
+
+        datos.append(adicionalExcel)
+        datos.append(adicionalPdf)
     
     
     return (datos)
