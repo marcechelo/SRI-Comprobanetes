@@ -294,33 +294,6 @@ def downloadPdf(request):
                 message = 'NO TIENE LOGO'
                 c.drawString(0.5*inch, (10.1)*inch, message)
 
-                #First Square
-   
-                p = Paragraph(arrayData[3], style1)
-                p.wrapOn(c, (3.4)*inch, (2.5)*inch)  # size of 'textbox' for linebreaks etc.
-                p.drawOn(c, (0.3)*inch, (8.9)*inch)
-
-                p = Paragraph(arrayData[10], style2)
-                p.wrapOn(c, (3.4)*inch, (2.5)*inch)
-                p.drawOn(c, (0.3)*inch, (8.3)*inch)
-
-
-                p = Paragraph('Dirección Matriz', productsLeftStyle)
-                p1 = Paragraph('Dirección sucursal', productsLeftStyle) 
-                p2 = Paragraph(arrayData[4], productsLeftStyle)   
-                p3 = Paragraph(arrayData[11], productsLeftStyle)
-
-                size = A4
-                dataDirecciones = [[p, p2],[p1, p3]]
-                tableDirecciones = Table(dataDirecciones, colWidths=[50, 200])
-                tableDirecciones.canv = c
-                w, heightAux = tableDirecciones.wrap(0,0)
-                tableDirecciones.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                    ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                    ("ALIGN", (1,0), (1,-1), "RIGHT"),])
-                tableDirecciones.wrapOn(c, size[0], size[1])
-                tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
-
                 c.setFont("Helvetica", 8)
                 c.setFillColorRGB(0,0,0)
                 message = 'OBLIGADO A LLEVAR:                   ' + arrayData[13]
@@ -372,6 +345,32 @@ def downloadPdf(request):
                 c.translate(0*inch, 0*inch)
 
                 if comprobanteType == 'Factura':
+
+                    #First Square
+                    p = Paragraph(arrayData[3], style1)
+                    p.wrapOn(c, (3.4)*inch, (2.5)*inch)  # size of 'textbox' for linebreaks etc.
+                    p.drawOn(c, (0.3)*inch, (8.9)*inch)
+
+                    p = Paragraph(arrayData[10], style2)
+                    p.wrapOn(c, (3.4)*inch, (2.5)*inch)
+                    p.drawOn(c, (0.3)*inch, (8.3)*inch)
+
+
+                    p = Paragraph('Dirección Matriz', productsLeftStyle)
+                    p1 = Paragraph('Dirección sucursal', productsLeftStyle) 
+                    p2 = Paragraph(arrayData[4], productsLeftStyle)   
+                    p3 = Paragraph(arrayData[11], productsLeftStyle)
+
+                    size = A4
+                    dataDirecciones = [[p, p2],[p1, p3]]
+                    tableDirecciones = Table(dataDirecciones, colWidths=[50, 200])
+                    tableDirecciones.canv = c
+                    w, heightAux = tableDirecciones.wrap(0,0)
+                    tableDirecciones.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                        ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                        ("ALIGN", (1,0), (1,-1), "RIGHT"),])
+                    tableDirecciones.wrapOn(c, size[0], size[1])
+                    tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
 
                     #Third square
                     c.setFont("Helvetica", 8)
@@ -816,6 +815,32 @@ def downloadPdf(request):
 
                 if comprobanteType == 'Comprobante de Retención':
 
+                    #First Square
+                    p = Paragraph(arrayData[3], style1)
+                    p.wrapOn(c, (3.4)*inch, (2.5)*inch)  # size of 'textbox' for linebreaks etc.
+                    p.drawOn(c, (0.3)*inch, (8.9)*inch)
+
+                    p = Paragraph(arrayData[10], style2)
+                    p.wrapOn(c, (3.4)*inch, (2.5)*inch)
+                    p.drawOn(c, (0.3)*inch, (8.3)*inch)
+
+
+                    p = Paragraph('Dirección Matriz', productsLeftStyle)
+                    p1 = Paragraph('Dirección sucursal', productsLeftStyle) 
+                    p2 = Paragraph(arrayData[4], productsLeftStyle)   
+                    p3 = Paragraph(arrayData[14], productsLeftStyle)
+
+                    size = A4
+                    dataDirecciones = [[p, p2],[p1, p3]]
+                    tableDirecciones = Table(dataDirecciones, colWidths=[50, 200])
+                    tableDirecciones.canv = c
+                    w, heightAux = tableDirecciones.wrap(0,0)
+                    tableDirecciones.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                        ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                        ("ALIGN", (1,0), (1,-1), "RIGHT"),])
+                    tableDirecciones.wrapOn(c, size[0], size[1])
+                    tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
+
                     #Third square
                     c.setFont("Helvetica", 8)
                     c.setFillColorRGB(0,0,0)
@@ -893,8 +918,11 @@ def downloadPdf(request):
                             data.append(item)
                     
                     #Crea la tabla de información adicional
+                    print('total renta: ' +str(arrayData[17]))
+                    print('total iva: ' +str(arrayData[18]))
+                    print('total isd: ' +str(arrayData[19]))
                     p = Paragraph('Información Adicional', style3)
-                    p1 = Paragraph(arrayData[18], style4)
+                    p1 = Paragraph(arrayData[21], style4)
                     infoAdicionalArray = [[p], [p1]]
                     tableAdicional = Table(infoAdicionalArray, colWidths=[300])
                     tableAdicional.canv = c
@@ -1122,7 +1150,7 @@ def downloadeExcel(request):
                     worksheet.write('M'+str(count), arrayData[12], data_format)
                     worksheet.write('K'+str(count), arrayData[13], data_format)
                     worksheet.write('N'+str(count), arrayData[15], data_format)
-                    worksheet.write('O'+str(count), arrayData[17], data_format)
+                    worksheet.write('O'+str(count), arrayData[20], data_format)
 
             workbook.close()
 
@@ -1584,6 +1612,9 @@ def getData(arg):
             if impuestos is not None:
 
                 arrayImpuestos = []
+                totalIva = 0
+                totalRenta = 0
+                totalIsd = 0
 
                 for child in impuestos.findall('impuesto'):
 
@@ -1592,28 +1623,88 @@ def getData(arg):
                     if child.find('codDocSustento') is not None:
                         codDocSustentoNum = int(child.find('codDocSustento').text)
                         if codDocSustentoNum == 1:
-                            codDocSustento = 'FACTURA'
+                            codDocSustento = 'Factura'
                         elif codDocSustentoNum == 2:
-                            codDocSustento = 'NOTA O BOLETA DE VENTA'
+                            codDocSustento = 'Nota o boleta de venta'
                         elif codDocSustentoNum == 3:
-                            codDocSustento = 'LIQUIDACIÓN DE COMPRA'
+                            codDocSustento = 'Liquidación de compra de Bienes o Prestación de servicios'
                         elif codDocSustentoNum == 4:
-                            codDocSustento = 'NOTA DE CRÉDITO'
+                            codDocSustento = 'Nota de crédito'
                         elif codDocSustentoNum == 5:
-                            codDocSustento = 'NOTA DE DÉBITO'
+                            codDocSustento = 'Nota de débito'
                         elif codDocSustentoNum == 6:
-                            codDocSustento = 'GUÍA DE REMISIÓN'
+                            codDocSustento = 'Guías de Remisión'
                         elif codDocSustentoNum == 7:
-                            codDocSustento = 'COMPROBANTE DE RETENCIÓN'
+                            codDocSustento = 'Comprobante de Retención'
                         elif codDocSustentoNum == 8:
-                            codDocSustento = 'BOLETOS ESPECTÁCULOS PÚBLICOS'
+                            codDocSustento = 'Boletos o entradas a espectáculos públicos'
                         elif codDocSustentoNum == 9:
-                            codDocSustento = 'TIQUETES DE MÁQ. REGISTRADORAS'
+                            codDocSustento = 'Tiquetes o vales emitidos por máquinas registradoras'
+                        elif codDocSustentoNum == 11:
+                            codDocSustento = 'Pasajes expedidos por empresas de aviación'
+                        elif codDocSustentoNum == 12:
+                            codDocSustento = 'Documentos emitidos por instituciones financieras'
+                        elif codDocSustentoNum == 15:
+                            codDocSustento = 'Comprobante de venta emitido en el Exterior'
+                        elif codDocSustentoNum == 16:
+                            codDocSustento = 'FEU o DAU o DAV'
+                        elif codDocSustentoNum == 18:
+                            codDocSustento = 'Documentos autorizados utilizados en ventas excepto N/C N/D '
+                        elif codDocSustentoNum == 19:
+                            codDocSustento = 'Comprobantes de Pago de Cuotas o Aportes'
+                        elif codDocSustentoNum == 20:
+                            codDocSustento = 'Documentos por Servicios Administrativos emitidos por Inst. del Estado'
+                        elif codDocSustentoNum == 21:
+                            codDocSustento = 'Carta de Porte Aéreo'
+                        elif codDocSustentoNum == 22:
+                            codDocSustento = 'RECAP'
+                        elif codDocSustentoNum == 23:
+                            codDocSustento = 'Nota de Crédito TC'
+                        elif codDocSustentoNum == 24:
+                            codDocSustento = 'Nota de Débito TC'
+                        elif codDocSustentoNum == 41:
+                            codDocSustento = 'Comprobante de venta emitido por reembolso'
+                        elif codDocSustentoNum == 42:
+                            codDocSustento = 'Documento agente de retención Presuntiva'
+                        elif codDocSustentoNum == 43:
+                            codDocSustento = 'Liquidación para Explotación y Exploracion de Hidrocarburos'
+                        elif codDocSustentoNum == 44:
+                            codDocSustento = 'Comprobante de Contribuciones y Aportes'
+                        elif codDocSustentoNum == 45:
+                            codDocSustento = 'Liquidación por reclamos de aseguradoras'
+                        elif codDocSustentoNum == 47:
+                            codDocSustento = 'Nota de Crédito por Reembolso Emitida por Intermediario'
+                        elif codDocSustentoNum == 48:
+                            codDocSustento = 'Nota de Débito por Reembolso Emitida por Intermediario'
+                        elif codDocSustentoNum == 49:
+                            codDocSustento = 'Proveedor Directo de Exportador Bajo Régimen Especial'
+                        elif codDocSustentoNum == 50:
+                            codDocSustento = 'A Inst. Estado y Empr. Públicas que percibe ingreso exento de Imp. Renta'
+                        elif codDocSustentoNum == 51:
+                            codDocSustento = 'N/C A Inst. Estado y Empr. Públicas que percibe ingreso exento de Imp. Renta'
+                        elif codDocSustentoNum == 52:
+                            codDocSustento = 'N/D A Inst. Estado y Empr. Públicas que percibe ingreso exento de Imp. Renta'
+                        elif codDocSustentoNum == 294:
+                            codDocSustento = 'Liquidación de compra de Bienes Muebles Usados'
+                        elif codDocSustentoNum == 344:
+                            codDocSustento = 'Liquidación de compra de vehículos usados'
+                        elif codDocSustentoNum == 364:
+                            codDocSustento = 'Acta Entrega-Recepción PET'
+                        elif codDocSustentoNum == 370:
+                            codDocSustento = 'Factura operadora transporte / socio'
+                        elif codDocSustentoNum == 371:
+                            codDocSustento = 'Comprobante socio a operadora de transporte'
+                        elif codDocSustentoNum == 372:
+                            codDocSustento = 'Nota de crédito operadora transporte / socio'
+                        elif codDocSustentoNum == 373:
+                            codDocSustento = 'Nota de débito operadora transporte / socio'
+                        elif codDocSustentoNum == 00:
+                            codDocSustento = 'otros'
                         else:
                             codDocSustento = ''
                     else:
                         codDocSustento = ''
-                    detalle1 = Paragraph(codDocSustento, productsCenterStyle)
+                    detalle1 = Paragraph(codDocSustento.upper(), productsCenterStyle)
                     
                     if child.find('numDocSustento') is not None:
                         numDocSustento = child.find('numDocSustento').text
@@ -1635,14 +1726,19 @@ def getData(arg):
                         baseImponible = ''
                     detalle5 = Paragraph(baseImponible, productsCenterStyle)
                     
-                    if child.find('codigo') is not None:
+                    if (child.find('codigo') is not None and
+                        child.find('valorRetenido') is not None):
                         codigoNum = int(child.find('codigo').text)
+                        valorRetenido = float(child.find('valorRetenido').text)
                         if codigoNum == 1:
                             codigo = 'RENTA'
+                            totalRenta += valorRetenido
                         elif codigoNum == 2:
                             codigo = 'IVA'
+                            totalIva += valorRetenido
                         elif codigoNum == 6:
                             codigo = 'ISD'
+                            totalIsd += valorRetenido
                         else:
                             codigo = ''
                     else:
@@ -1672,6 +1768,9 @@ def getData(arg):
                     arrayImpuestos.append(arrayImpuesto)
                 
                 datos.append(arrayImpuestos)
+                datos.append(totalRenta)
+                datos.append(totalIva)
+                datos.append(totalIsd)
 
         if infoAdicional is not None:
             adicionalPdf = ''
