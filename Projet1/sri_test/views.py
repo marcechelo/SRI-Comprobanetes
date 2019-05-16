@@ -855,7 +855,7 @@ def downloadPdf(request):
                     # CREACION DE LA TABLA CON LOS COMPROBANTES DE RETENCION
 
                     #Campos de titulo
-                    p = Paragraph('Comprobanete', style3)
+                    p = Paragraph('Comprobante', style3)
                     p1 = Paragraph('Número', style3)
                     p2 = Paragraph('Fecha Emisión', style3)
                     p3 = Paragraph('Ejercicio Fiscal', style3)
@@ -872,7 +872,7 @@ def downloadPdf(request):
                     #Iteración del arreglo de datos para llenar la tabla
                     for index, item in enumerate(arrayData[16]):
                         data.append(item)
-                        table = Table(data,  colWidths=[65, 80, 65, 65, 85, 65, 65, 65])
+                        table = Table(data,  colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
                         table.canv = c
                         w, h = table.wrap(0,0)
 
@@ -882,7 +882,7 @@ def downloadPdf(request):
                             auxiliar = data
                             auxiliar.pop()
 
-                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 65])
+                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
                             table.canv = c
                             table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
@@ -903,7 +903,7 @@ def downloadPdf(request):
                             auxiliar = data
                             auxiliar.pop()
 
-                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 65])
+                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
                             table.canv = c
                             table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
