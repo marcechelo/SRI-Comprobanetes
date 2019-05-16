@@ -69,11 +69,8 @@ def index(request):
 class sri_document(TemplateView):
     dataArray = ['something', 'here']
     
-    
-    
 # app.run(host='10.0.2.15')
 #@app.route('/read_txt', methods=['GET'])
-
 def read_txt(request):
     control_flag = False
     xml_readed = open("recibidos.txt", "r",encoding="ISO-8859-1").readlines()
@@ -918,11 +915,8 @@ def downloadPdf(request):
                             data.append(item)
                     
                     #Crea la tabla de información adicional
-                    print('total renta: ' +str(arrayData[17]))
-                    print('total iva: ' +str(arrayData[18]))
-                    print('total isd: ' +str(arrayData[19]))
                     p = Paragraph('Información Adicional', style3)
-                    p1 = Paragraph(arrayData[21], style4)
+                    p1 = Paragraph(arrayData[23], style4)
                     infoAdicionalArray = [[p], [p1]]
                     tableAdicional = Table(infoAdicionalArray, colWidths=[300])
                     tableAdicional.canv = c
@@ -1086,20 +1080,23 @@ def downloadeExcel(request):
                 #Tamaños columnas
                 worksheet.set_column('L:L',20)
                 worksheet.set_column('M:M',30)
-                worksheet.set_column('N:N',20)
-                worksheet.set_column('O:O',30)
+                worksheet.set_column('N:S',20)
+                worksheet.set_column('T:T',30)
 
                 #Tipo de Campos
-                worksheet.merge_range('L1:N1', 'Información Retención', merge_format)
-                worksheet.write('O1', 'Información Adicional', merge_format)
+                worksheet.merge_range('L1:S1', 'Información Retención', merge_format)
+                worksheet.write('T1', 'Información Adicional', merge_format)
 
                 #Campos decripcion
                 worksheet.write('L2', 'Fecha Emisión', titles_format)
                 worksheet.write('M2', 'Razón Social / Nombres y Apellidos', titles_format)
                 worksheet.write('N2', 'Identificación', titles_format)
-                worksheet.write('O2', 'Información Adicional', titles_format)
-
-            
+                worksheet.write('O2', 'Periodo Fiscal', titles_format)
+                worksheet.write('P2', 'Total IVA', titles_format)
+                worksheet.write('Q2', 'Total Renta', titles_format)
+                worksheet.write('R2', 'Total ISD', titles_format)
+                worksheet.write('S2', 'Total Retenido', titles_format)
+                worksheet.write('T2', 'Información Adicional', titles_format)
 
             count = 2
 
@@ -1150,7 +1147,12 @@ def downloadeExcel(request):
                     worksheet.write('M'+str(count), arrayData[12], data_format)
                     worksheet.write('K'+str(count), arrayData[13], data_format)
                     worksheet.write('N'+str(count), arrayData[15], data_format)
-                    worksheet.write('O'+str(count), arrayData[20], data_format)
+                    worksheet.write('O'+str(count), arrayData[21], data_format)
+                    worksheet.write('P'+str(count), arrayData[18], data_format)
+                    worksheet.write('Q'+str(count), arrayData[17], data_format)
+                    worksheet.write('R'+str(count), arrayData[19], data_format)
+                    worksheet.write('S'+str(count), arrayData[20], data_format)
+                    worksheet.write('T'+str(count), arrayData[22], data_format)
 
             workbook.close()
 
@@ -1615,6 +1617,7 @@ def getData(arg):
                 totalIva = 0
                 totalRenta = 0
                 totalIsd = 0
+                totalRetenido = 0
 
                 for child in impuestos.findall('impuesto'):
 
@@ -1753,6 +1756,7 @@ def getData(arg):
                     
                     if child.find('valorRetenido') is not None:
                         valorRetenido = child.find('valorRetenido').text
+                        totalRetenido += float(valorRetenido)
                     else:
                         valorRetenido = ''
                     detalle8 = Paragraph(valorRetenido, productsCenterStyle)
@@ -1771,6 +1775,8 @@ def getData(arg):
                 datos.append(totalRenta)
                 datos.append(totalIva)
                 datos.append(totalIsd)
+                datos.append(totalRetenido)
+            datos.append(periodoFiscal)
 
         if infoAdicional is not None:
             adicionalPdf = ''
