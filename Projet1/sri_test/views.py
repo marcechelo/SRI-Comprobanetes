@@ -173,9 +173,14 @@ def test(request):
         for item in document_array[1:]:
             newArray.append(item)
 
-        context = {'comprobantes_data': newArray, 'arreglo': document_array}
         comprobanteType = newArray[0][0]
-        print(comprobanteType)
+
+        if comprobanteType == 'Factura':
+            context = {'comprobantes_data': newArray, 'tipoComprobante': 1}
+        elif comprobanteType == 'Comprobante de Retención':
+            context = {'comprobantes_data': newArray, 'tipoComprobante': 2}
+        else:
+            context = {'comprobantes_data': newArray, 'tipoComprobante': 0}
 
         # print(aux2)
         # uglyxml = '<?xml version="1.0" encoding="UTF-8" ?><employees><employee><Name>Leonardo DiCaprio</Name></employee></employees>'
@@ -200,9 +205,9 @@ def downloadxml(request):
     if len(dataDocumentArray) != 0:
         root = tkinter.Tk()
         root.lift()
-        #root.attributes('-topmost',True)
-        #root.after_idle(root.attributes,'-topmost',False)
-        #root.geometry("0x0")
+        root.attributes('-topmost',True)
+        root.after_idle(root.attributes,'-topmost',False)
+        root.geometry("0x0")
         dirname = filedialog.askdirectory()
         print(dirname)
         root.destroy()

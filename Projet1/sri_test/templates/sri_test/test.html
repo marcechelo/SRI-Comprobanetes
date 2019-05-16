@@ -119,42 +119,87 @@
                     <div class="col-sm-12" style="border-style: solid; border-width: 1px; border-color: black">
 
                         {% if comprobantes_data %}
-                        <table class="table table-responsive">
-                            <thead>
-                                <tr>
-                                    <th scope="col">#</th>
-                                    <th scope="col">Comprobante</th>
-                                    <th scope="col">Serie Comprobante</th>
-                                    <th scope="col">RUC Emisor</th>
-                                    <th scope="col">Razon Social</th>
-                                    <th scope="col">Fecha Emision</th>
-                                    <th scope="col">Fecha Autorizacion</th>
-                                    <th scope="col">Tipo Emision</th>
-                                    <th scope="col">Identificacion Receptor</th>
-                                    <!-- <th scope="col">Clave Acceso</th> --> 
-                                    <th scope="col">Numero Autorizacion</th>
-                                    <th scope="col">Imorte Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in comprobantes_data %}
-                                <tr>
-                                    <th scope="row">{{forloop.counter}}</th>
-                                    <td>{{item.0}}</td>
-                                    <td>{{item.1}}</td>
-                                    <td>{{item.2}}</td>
-                                    <td>{{item.3}}</td>
-                                    <td>{{item.4}}</td>
-                                    <td>{{item.5}}</td>
-                                    <td>{{item.6}}</td>
-                                    <td>{{item.7}}</td>
-                                    <!-- <td>{{item.8}}</td> --> 
-                                    <td>{{item.9}}</td>
-                                    <td>{{item.10}}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+
+                            {% if  tipoComprobante == 1 %}
+
+                            <table class="table table-responsive">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Comprobante</th>
+                                        <th scope="col">Serie Comprobante</th>
+                                        <th scope="col">RUC Emisor</th>
+                                        <th scope="col">Razón Social</th>
+                                        <th scope="col">Fecha Emisión</th>
+                                        <th scope="col">Fecha Autorización</th>
+                                        <th scope="col">Tipo Emisión</th>
+                                        <th scope="col">Identificación Receptor</th>
+                                        <!-- <th scope="col">Clave Acceso</th> --> 
+                                        <th scope="col">Número Autorización</th>
+                                        <th scope="col">Importe Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in comprobantes_data %}
+                                    <tr>
+                                        <th scope="row">{{forloop.counter}}</th>
+                                        <td>{{item.0}}</td>
+                                        <td>{{item.1}}</td>
+                                        <td>{{item.2}}</td>
+                                        <td>{{item.3}}</td>
+                                        <td>{{item.4}}</td>
+                                        <td>{{item.5}}</td>
+                                        <td>{{item.6}}</td>
+                                        <td>{{item.7}}</td>
+                                        <!-- <td>{{item.8}}</td> --> 
+                                        <td>{{item.9}}</td>
+                                        <td>{{item.10}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            {% endif %}
+
+                            {% if tipoComprobante == 2 %}
+
+                            <table class="table table-responsive">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Comprobante</th>
+                                        <th scope="col">Serie Comprobante</th>
+                                        <th scope="col">RUC Emisor</th>
+                                        <th scope="col">Razón Social</th>
+                                        <th scope="col">Fecha Emisión</th>
+                                        <th scope="col">Fecha Autorización</th>
+                                        <th scope="col">Tipo Emisión</th>
+                                        <th scope="col">No</th>
+                                        <th scope="col">Identificacion Receptor</th>
+                                        <th scope="col">Número Autorización</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in comprobantes_data %}
+                                    <tr>
+                                        <th scope="row">{{forloop.counter}}</th>
+                                        <td>{{item.0}}</td>
+                                        <td>{{item.1}}</td>
+                                        <td>{{item.2}}</td>
+                                        <td>{{item.3}}</td>
+                                        <td>{{item.4}}</td>
+                                        <td>{{item.5}}</td>
+                                        <td>{{item.6}}</td>
+                                        <td>{{item.7}}</td>
+                                        <td>{{item.8}}</td>
+                                        <td>{{item.9}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                            {% endif %}
+                        
                         {% else %}
                         <div style="height: 20rem; text-align: center">
                             <h5 style="padding-top: 10rem; font-weight: bold">CARGUE UN ARCHIVO Y PRESIONE EL BOTON
