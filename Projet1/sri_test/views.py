@@ -205,13 +205,13 @@ def downloadxml(request):
     if len(dataDocumentArray) != 0:
         root = tkinter.Tk()
         root.lift()
-        #root.attributes('-topmost',True)
-        #root.after_idle(root.attributes,'-topmost',False)
-        #root.geometry("0x0")
-        #dirname = filedialog.askdirectory()
-        dirname = '/Users/cristhianimba/Downloads/'
+        root.attributes('-topmost',True)
+        root.after_idle(root.attributes,'-topmost',False)
+        root.geometry("0x0")
+        dirname = filedialog.askdirectory()
+        #dirname = '/Users/cristhianimba/Downloads/'
         print(dirname)
-        #root.destroy()
+        root.destroy()
         if dirname != '':
             for i in dataDocumentArray[1:]:
 
@@ -248,15 +248,15 @@ def downloadPdf(request):
     global fileUploaded, dataDocumentArray, comprobanteType
 
     if len(dataDocumentArray) != 0 :
-        #root = tkinter.Tk()
-        #root.lift()
-        #root.attributes('-topmost',True)
-        #root.after_idle(root.attributes,'-topmost',False)
-        #root.geometry("0x0")
-        #dirname = filedialog.askdirectory(initialdir=os.getcwd(),title='Please select a directory')
-        dirname = '/Users/cristhianimba/Downloads/'
+        root = tkinter.Tk()
+        root.lift()
+        root.attributes('-topmost',True)
+        root.after_idle(root.attributes,'-topmost',False)
+        root.geometry("0x0")
+        dirname = filedialog.askdirectory(initialdir=os.getcwd(),title='Please select a directory')
+        #dirname = '/Users/cristhianimba/Downloads/'
         print(dirname)
-        #root.destroy()
+        root.destroy()
 
         #Eestilos para los párrafos que usaran en la tabla
 
@@ -1008,19 +1008,19 @@ def downloadeExcel(request):
 
     if len(dataDocumentArray) != 0 :
         
-        #root = tkinter.Tk()
-        #root.lift()
-        #root.attributes('-topmost',True)
-        #root.after_idle(root.attributes,'-topmost',False)
-        #dirname = filedialog.asksaveasfilename(filetypes = (("Excel files", "*.xlsx"),("All files", "*.*") ))
-        fecha = datetime.datetime.time()
-        print(fecha)
-        timestampStr = fecha.strftime("%d-%b-%Y (%H:%M:%S.%f)")
-        dirname = '/Users/cristhianimba/Downloads/'
-        workbook = xlsxwriter.Workbook(dirname+timestampStr+'.xlsx') 
+        root = tkinter.Tk()
+        root.lift()
+        root.attributes('-topmost',True)
+        root.after_idle(root.attributes,'-topmost',False)
+        dirname = filedialog.asksaveasfilename(filetypes = (("Excel files", "*.xlsx"),("All files", "*.*") ))
+        #fecha = datetime.datetime.time()
+        #print(fecha)
+        #timestampStr = fecha.strftime("%d-%b-%Y (%H:%M:%S.%f)")
+        #dirname = '/Users/cristhianimba/Downloads/'
+        workbook = xlsxwriter.Workbook(dirname+'.xlsx') 
         worksheet = workbook.add_worksheet() 
         print(dirname)
-        #root.destroy()
+        root.destroy()
         if dirname != '':
 
             #Formats
