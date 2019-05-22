@@ -318,7 +318,7 @@ def downloadPdf(request):
                 c.setFillColorRGB(0,0,0)
 
                 try:
-
+                    
                     message = 'OBLIGADO A LLEVAR:                   ' + arrayData[13]
                     c.drawString((0.3)*inch, (6.6)*inch, message)
                     
