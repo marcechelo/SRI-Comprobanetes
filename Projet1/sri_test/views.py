@@ -16,7 +16,6 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from reportlab.lib.utils import ImageReader
 
 from tkinter import filedialog
-from tkinter import *
 import tkinter
 
 #PDF libraries
@@ -30,7 +29,7 @@ from reportlab.lib.units import inch, mm
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, Table, TableStyle
 ########
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, redirect, url_for, make_response
 from flask_cors import CORS
 from flask_restful import Resource, Api
 
@@ -176,9 +175,15 @@ def test(request):
         comprobanteType = newArray[0][0]
 
         if comprobanteType == 'Factura':
-            context = {'comprobantes_data': newArray, 'tipoComprobante': 1}
+            if len(newArray[0]) == 11:
+                context = {'comprobantes_data': newArray, 'tipoComprobante': 1}
+            if len(newArray[0]) == 10:
+                context = {'comprobantes_data': newArray, 'tipoComprobante': 3}
         elif comprobanteType == 'Comprobante de Retención':
-            context = {'comprobantes_data': newArray, 'tipoComprobante': 2}
+            if len(newArray[0]) == 11:
+                context = {'comprobantes_data': newArray, 'tipoComprobante': 2}
+            if len(newArray[0]) == 10:
+                context = {'comprobantes_data': newArray, 'tipoComprobante': 4}
         else:
             context = {'comprobantes_data': newArray, 'tipoComprobante': 0}
 
@@ -191,17 +196,18 @@ def test(request):
         #return render(request,'sri_test/test.html', context)
         #return render(request, 'sri_test/test.html')
         fileUploaded = True    
-        return render(request, 'sri_test/test.html', context)
+        return render(request, 'sri_test/comprobantesRecibidos.html', context)
         
     else:
         fileUploaded = False
         empty = []
         dataDocumentArray = empty
-        return render(request, 'sri_test/test.html')
+        return render(request, 'sri_test/comprobantesRecibidos.html')
 
 def downloadxml(request):
     global fileUploaded, dataDocumentArray
 
+    
     if len(dataDocumentArray) != 0:
         root = tkinter.Tk()
         root.lift()
@@ -209,6 +215,7 @@ def downloadxml(request):
         root.after_idle(root.attributes,'-topmost',False)
         root.geometry("0x0")
         dirname = filedialog.askdirectory()
+        #dirname = '/Users/cristhianimba/Downloads/'
         print(dirname)
         root.destroy()
         if dirname != '':
@@ -216,9 +223,15 @@ def downloadxml(request):
 
                 claveAcceso = ''
                 if i[0] == 'Factura':
-                    claveAcceso = i[8]
+                    if len(i) == 11:
+                        claveAcceso = i[8]
+                    if len(i) == 10:
+                        claveAcceso = i[3]
                 if i[0] == 'Comprobante de Retención':
-                    claveAcceso = i[9]
+                    if len(i) == 11:
+                        claveAcceso = i[9]
+                    if len(i) == 10:
+                        claveAcceso = i[4]
                 if i[0] == 'Notas de Crédito':
                     claveAcceso = i[9]
                 if i[0] == 'Notas de Débito':
@@ -227,16 +240,20 @@ def downloadxml(request):
                 xml_response = bodyHeader2(claveAcceso)
                 xml_response = xml_response.replace("&lt;","<")
                 xml_response = xml_response.replace("&#xd;","")
-                with open(os.path.join(os.path.join(os.path.expanduser('~'),dirname,i[1]+".xml")), "w+") as file1:
-                    file1.write(xml_response)
-                #f = open(i[8]+".xml","w+")
-                #f.write(xml_response)
-                #print(dataDocumentArray)
+                if 'ERROR EN LA ESTRUCTURA DE LA CLAVE DE ACCESO' in xml_response:
+                    return HttpResponse(3)
+                else:        
+                    with open(os.path.join(os.path.join(os.path.expanduser('~'),dirname,i[1]+".xml")), "w+") as file1:
+                        file1.write(xml_response)
+                    #f = open(i[8]+".xml","w+")
+                    #f.write(xml_response)
+                    #print(dataDocumentArray)
             return HttpResponse(1)
         else:
             return HttpResponse(2)
     else:
         return HttpResponse(0)
+
         
 def downloadPdf(request):
     
@@ -248,7 +265,8 @@ def downloadPdf(request):
         root.attributes('-topmost',True)
         root.after_idle(root.attributes,'-topmost',False)
         root.geometry("0x0")
-        dirname = filedialog.askdirectory(parent=root, initialdir="/", title='Please select a directory')
+        dirname = filedialog.askdirectory(initialdir=os.getcwd(),title='Please select a directory')
+        #dirname = '/Users/cristhianimba/Downloads/'
         print(dirname)
         root.destroy()
 
@@ -265,10 +283,10 @@ def downloadPdf(request):
 
 
         if dirname != '':
-
             for i in dataDocumentArray[1:]:
         
                 arrayData = getData(i)
+                
 
                 #Creación del PDF
                 pathDir = dirname + '/'+ i[1] + '.pdf'
@@ -298,53 +316,58 @@ def downloadPdf(request):
 
                 c.setFont("Helvetica", 8)
                 c.setFillColorRGB(0,0,0)
-                message = 'OBLIGADO A LLEVAR:                   ' + arrayData[13]
-                c.drawString((0.3)*inch, (6.6)*inch, message)
-                
-                #Second Square
 
-                c.setFont("Helvetica", 14)
-                c.setFillColorRGB(0,0,0)
-                message = 'R.U.C.: ' + arrayData[6]
-                c.drawString((4.1)*inch, (10.3)*inch, message)
-                c.drawString((4.1)*inch, (10)*inch, arrayData[8])
+                try:
 
-                c.setFont("Helvetica", 10)
-                message = 'No.  ' + arrayData[9]
-                c.drawString((4.1)*inch, (9.7)*inch, message)
+                    message = 'OBLIGADO A LLEVAR:                   ' + arrayData[13]
+                    c.drawString((0.3)*inch, (6.6)*inch, message)
+                    
+                    #Second Square
 
-                message = 'NÚMERO DE AUTORIZACIÓN'
-                c.drawString((4.1)*inch, (9.4)*inch, message)
-                c.setFont("Helvetica", 7)
-                c.drawString((4.1)*inch, (9.1)*inch, arrayData[0])
+                    c.setFont("Helvetica", 14)
+                    c.setFillColorRGB(0,0,0)
+                    message = 'R.U.C.: ' + arrayData[6]
+                    c.drawString((4.1)*inch, (10.3)*inch, message)
+                    c.drawString((4.1)*inch, (10)*inch, arrayData[8])
 
-                c.setFont("Helvetica", 10)
-                message = 'FECHA Y HORA DE'
-                c.drawString((4.1)*inch, (8.8)*inch, message)
+                    c.setFont("Helvetica", 10)
+                    message = 'No.  ' + arrayData[9]
+                    c.drawString((4.1)*inch, (9.7)*inch, message)
 
-                fechaAut = dateutil.parser.parse(arrayData[1])
+                    message = 'NÚMERO DE AUTORIZACIÓN'
+                    c.drawString((4.1)*inch, (9.4)*inch, message)
+                    c.setFont("Helvetica", 7)
+                    c.drawString((4.1)*inch, (9.1)*inch, arrayData[0])
 
-                message = 'AUTORIZACIÓN:               ' + str(fechaAut)
-                c.drawString((4.1)*inch, (8.6)*inch, message)
+                    c.setFont("Helvetica", 10)
+                    message = 'FECHA Y HORA DE'
+                    c.drawString((4.1)*inch, (8.8)*inch, message)
 
-                message = 'AMBIENTE:                        ' + arrayData[2]
-                c.drawString((4.1)*inch, (8.3)*inch, message)
+                    fechaAut = dateutil.parser.parse(arrayData[1])
 
-                message = 'EMISIÓN:                           ' + arrayData[5]
-                c.drawString((4.1)*inch, (8.0)*inch, message)
+                    message = 'AUTORIZACIÓN:               ' + str(fechaAut)
+                    c.drawString((4.1)*inch, (8.6)*inch, message)
 
-                message = 'CLAVE DE ACCESO'
-                c.drawString((4.1)*inch, (7.7)*inch, message)
+                    message = 'AMBIENTE:                        ' + arrayData[2]
+                    c.drawString((4.1)*inch, (8.3)*inch, message)
 
-                logo = ImageReader(code128.image(arrayData[0]))
-                c.drawImage(logo,(4.2)*inch, (6.9)*inch,  width=250, height=40)
-                #message = 'HERE GOES THE IMAGE'
-                #c.drawString((4.1)*inch, (6.9)*inch, message)
+                    message = 'EMISIÓN:                           ' + arrayData[5]
+                    c.drawString((4.1)*inch, (8.0)*inch, message)
 
-                c.setFont("Helvetica", 7)
-                c.drawString((4.6)*inch, (6.7)*inch, arrayData[0])
+                    message = 'CLAVE DE ACCESO'
+                    c.drawString((4.1)*inch, (7.7)*inch, message)
 
-                c.translate(0*inch, 0*inch)
+                    logo = ImageReader(code128.image(arrayData[0]))
+                    c.drawImage(logo,(4.2)*inch, (6.9)*inch,  width=250, height=40)
+                    #message = 'HERE GOES THE IMAGE'
+                    #c.drawString((4.1)*inch, (6.9)*inch, message)
+
+                    c.setFont("Helvetica", 7)
+                    c.drawString((4.6)*inch, (6.7)*inch, arrayData[0])
+
+                    c.translate(0*inch, 0*inch)
+                except AttributeError:
+                    return HttpResponse(3)
 
                 if comprobanteType == 'Factura':
 
@@ -855,7 +878,7 @@ def downloadPdf(request):
                     # CREACION DE LA TABLA CON LOS COMPROBANTES DE RETENCION
 
                     #Campos de titulo
-                    p = Paragraph('Comprobanete', style3)
+                    p = Paragraph('Comprobante', style3)
                     p1 = Paragraph('Número', style3)
                     p2 = Paragraph('Fecha Emisión', style3)
                     p3 = Paragraph('Ejercicio Fiscal', style3)
@@ -872,7 +895,7 @@ def downloadPdf(request):
                     #Iteración del arreglo de datos para llenar la tabla
                     for index, item in enumerate(arrayData[16]):
                         data.append(item)
-                        table = Table(data,  colWidths=[65, 80, 65, 65, 85, 65, 65, 65])
+                        table = Table(data,  colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
                         table.canv = c
                         w, h = table.wrap(0,0)
 
@@ -882,7 +905,7 @@ def downloadPdf(request):
                             auxiliar = data
                             auxiliar.pop()
 
-                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 65])
+                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
                             table.canv = c
                             table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
@@ -903,7 +926,7 @@ def downloadPdf(request):
                             auxiliar = data
                             auxiliar.pop()
 
-                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 65])
+                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
                             table.canv = c
                             table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
@@ -979,7 +1002,7 @@ def downloadPdf(request):
     else:
         return HttpResponse(0)
 
-def comprobantesRecibidos(request):
+def comprobRecibido(request):
     global tipoComprobanete
     tipoComprobanete = 'recibido'
     print(tipoComprobanete)
@@ -1002,10 +1025,14 @@ def downloadeExcel(request):
         root.attributes('-topmost',True)
         root.after_idle(root.attributes,'-topmost',False)
         dirname = filedialog.asksaveasfilename(filetypes = (("Excel files", "*.xlsx"),("All files", "*.*") ))
+        #fecha = datetime.datetime.now()
+        #print(fecha)
+        #timestampStr = fecha.strftime("%d-%b-%Y (%H:%M:%S.%f)")
+        #dirname = '/Users/cristhianimba/Downloads/'
         workbook = xlsxwriter.Workbook(dirname+'.xlsx') 
         worksheet = workbook.add_worksheet() 
         print(dirname)
-        root.destroy()
+        #root.destroy()
         if dirname != '':
 
             #Formats
@@ -1180,11 +1207,19 @@ def getData(arg):
     claveAcceso = ''
     tipoComp = 0
     if arg[0] == 'Factura':
-        claveAcceso = arg[8]
-        tipoComp = 1
+        if len(arg) == 11:
+            claveAcceso = arg[8]
+            tipoComp = 1
+        if len(arg) == 10:
+            claveAcceso = arg[3]
+            tipoComp = 3
     if arg[0] == 'Comprobante de Retención':
-        tipoComp = 2
-        claveAcceso = arg[9]
+        if len(arg) == 11:
+            tipoComp = 2
+            claveAcceso = arg[9]
+        if len(arg) == 10:
+            claveAcceso = arg[4]
+            tipoComp = 4
     if arg[0] == 'Notas de Crédito':
         claveAcceso = arg[9]
     if arg[0] == 'Notas de Débito':
@@ -1206,19 +1241,22 @@ def getData(arg):
     ns2 = {'ns2': 'http://ec.gob.sri.ws.autorizacion'}
     root = ElementTree.fromstring(xml_response)
 
-    numeroAutorizacion = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('numeroAutorizacion').text
-    datos.append(numeroAutorizacion)
+    try:
+        numeroAutorizacion = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('numeroAutorizacion').text
+        datos.append(numeroAutorizacion)
 
-    fechaAutorizacion = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('fechaAutorizacion').text
-    datos.append(fechaAutorizacion)
+        fechaAutorizacion = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('fechaAutorizacion').text
+        datos.append(fechaAutorizacion)
 
-    ambiente = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('ambiente').text
-    datos.append(ambiente)
+        ambiente = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('ambiente').text
+        datos.append(ambiente)
 
-    claveAccesoConsultada = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('claveAccesoConsultada').text
-    
-    value = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('comprobante')
-    
+        claveAccesoConsultada = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('claveAccesoConsultada').text
+        
+        value = root.find('soap:Body', ns).find('{http://ec.gob.sri.ws.autorizacion}autorizacionComprobanteResponse').find('RespuestaAutorizacionComprobante').find('autorizaciones').find('autorizacion').find('comprobante')
+    except AttributeError:
+        return HttpResponse(3)
+
     if value is not None:
 
         text2 = value.text.replace("&lt;","<")
@@ -1295,7 +1333,7 @@ def getData(arg):
             datos.append(nombreComercial)
         
 
-        if tipoComp == 1:
+        if (tipoComp == 1 or tipoComp == 3):
 
             detalles = rootComprobante.find('detalles')
             infoFactura = rootComprobante.find('infoFactura')
@@ -1570,7 +1608,7 @@ def getData(arg):
             
                 datos.append(detalleArray)
 
-        if tipoComp == 2: 
+        if (tipoComp == 2 or tipoComp == 4): 
 
             infoCompRetencion = rootComprobante.find('infoCompRetencion')
             impuestos = rootComprobante.find('impuestos')
@@ -1810,4 +1848,5 @@ def bodyHeader2(arg):
     body += "</Envelope>"
     r = requests.post(url="https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl", data=body, headers=headers)
     return (r.text)
+
 
