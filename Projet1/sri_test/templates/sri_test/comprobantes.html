@@ -262,6 +262,13 @@
                             </table>
 
                             {% endif %}
+                            
+                            {% if tipoComprobante == 5 %}
+                            <div style="height: 20rem; text-align: center">
+                                <h5 style="padding-top: 10rem; font-weight: bold">EL ARCHIVO QUE SELECCIONO NO ES VALIDO</h5>
+                            </div>
+
+                            {% endif %}
                         
                         {% else %}
                         <div style="height: 20rem; text-align: center">

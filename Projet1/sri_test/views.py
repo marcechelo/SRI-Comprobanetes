@@ -184,6 +184,8 @@ def test(request):
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 2}
             if len(newArray[0]) == 10:
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 4}
+        elif (comprobanteType != 'Factura' and comprobanteType != 'Comprobante de Retención'):
+            context = {'comprobantes_data': newArray, 'tipoComprobante': 5}
         else:
             context = {'comprobantes_data': newArray, 'tipoComprobante': 0}
 
