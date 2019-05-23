@@ -196,13 +196,13 @@ def test(request):
         #return render(request,'sri_test/test.html', context)
         #return render(request, 'sri_test/test.html')
         fileUploaded = True    
-        return render(request, 'sri_test/comprobantesRecibidos.html', context)
+        return render(request, 'sri_test/comprobantes.html', context)
         
     else:
         fileUploaded = False
         empty = []
         dataDocumentArray = empty
-        return render(request, 'sri_test/comprobantesRecibidos.html')
+        return render(request, 'sri_test/comprobantes.html')
 
 def downloadxml(request):
     global fileUploaded, dataDocumentArray

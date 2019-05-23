@@ -58,7 +58,7 @@
                         <div class="input-group mb-3">
                               
                             <div class="input-group-prepend"> 
-                                    <form method="post" action="{% url 'sri_test:comprobantesRecibidos' %}" enctype="multipart/form-data">
+                                    <form method="post" action="{% url 'sri_test:comprobantes' %}" enctype="multipart/form-data">
                                         {% csrf_token %}                                
                                 <button id="trashButton" type="submit" class="btn btn-secondary"
                                     style="background-color: white; border-color: #ced4da; height: 2.4rem;"><i class="fa fa-trash"
@@ -68,7 +68,7 @@
                             </div>
                             <div class="custom-file">
                                 
-                                    <form method="post" action="{% url 'sri_test:comprobantesRecibidos' %}" enctype="multipart/form-data">
+                                    <form method="post" action="{% url 'sri_test:comprobantes' %}" enctype="multipart/form-data">
                                         {% csrf_token %}
                                 <input type="file" class="custom-file-input" id="inputGroupFile03"
                                     aria-describedby="inputGroupFileAddon03" name="document">

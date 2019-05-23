@@ -7,7 +7,7 @@ app_name = 'sri_test'
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('comprobantesRecibidos/', views.test, name= 'comprobantesRecibidos'),
+    path('comprobantes/', views.test, name= 'comprobantes'),
     path('downloadxml/', views.downloadxml, name= 'downloadxml'),
     path('downloadPdf/', views.downloadPdf, name= 'downloadPdf'),
     path('downloadeExcel/', views.downloadeExcel, name = 'downloadeExcel'),
