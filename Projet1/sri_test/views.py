@@ -62,8 +62,7 @@ file = None
 comprobanteType = ''
 
 def index(request):
-    context = {'message': 'Hello world!', 'second': 'message 2!'}
-    return render(request,'sri_test/index.html', context)
+    return render(request,'sri_test/comprobantes.html')
 
 class sri_document(TemplateView):
     dataArray = ['something', 'here']
