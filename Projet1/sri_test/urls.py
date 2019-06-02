@@ -15,5 +15,6 @@ urlpatterns = [
     path('recibidos/', views.comprobRecibido, name= 'recibidos'),
 
     path('read/', views.read_txt, name= 'read'),
+    path('pdf/', views.getpdf, name='pdf'),
 
 ]

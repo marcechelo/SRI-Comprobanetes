@@ -5,6 +5,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views import generic
 from django.views.generic import TemplateView
+from django.http import FileResponse
 from datetime import datetime
 
 from reportlab.lib import colors
@@ -48,6 +49,9 @@ import datetime
 import dateutil.parser
 import code128
 import string
+import io
+import zipfile
+
 
 
 app = Flask(__name__)
@@ -88,11 +92,9 @@ def read_txt(request):
             control_flag = False
             document_array.append(obj)
             obj = []
-    # print(document_array)
+
 
     for i in document_array:
-        # print("______________________________________")
-        # print(i[8])
         headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
         body = "<Envelope xmlns=\"http://schemas.xmlsoap.org/soap/envelope/\">"
         body += "    <Body>"
@@ -108,11 +110,11 @@ def read_txt(request):
         # xml_pretty_str = xml.toprettyxml()
         f = open(i[8]+".xml","w+")
         f.write(xml_response)
-    # print(aux2)
+        
     # uglyxml = '<?xml version="1.0" encoding="UTF-8" ?><employees><employee><Name>Leonardo DiCaprio</Name></employee></employees>'
     # xml = xml.dom.minidom.parseString(uglyxml)
     # xml_pretty_str = xml.toprettyxml()
-    # print(xml_pretty_str)
+    
     context = {'second': document_array}
     return render(request,'sri_test/read_text.html', context)
 
@@ -150,7 +152,6 @@ def test(request):
 
         #for line in xml_readed2:
             #data = b"line".decode("ISO-8859-1")
-            #print(str(line, 'ISO-8859-1').split("\t"))
         
         document_array = []
         newArray = []
@@ -168,31 +169,33 @@ def test(request):
                 document_array.append(obj)
                 obj = []
             dataDocumentArray = document_array
+        
         for item in document_array[1:]:
             newArray.append(item)
 
         comprobanteType = newArray[0][0]
 
+        context = {}
         if comprobanteType == 'Factura':
             if len(newArray[0]) == 11:
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 1}
-            if len(newArray[0]) == 10:
+            elif len(newArray[0]) == 10:
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 3}
         elif comprobanteType == 'Comprobante de Retención':
-            if len(newArray[0]) == 11:
+            if len(newArray[0]) == 12 :
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 2}
-            if len(newArray[0]) == 10:
+            elif len(newArray[0]) == 11:
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 4}
+            else:
+                context = {'error':'error'}
         elif (comprobanteType != 'Factura' and comprobanteType != 'Comprobante de Retención'):
             context = {'comprobantes_data': newArray, 'tipoComprobante': 5}
         else:
             context = {'comprobantes_data': newArray, 'tipoComprobante': 0}
-
-        # print(aux2)
+  
         # uglyxml = '<?xml version="1.0" encoding="UTF-8" ?><employees><employee><Name>Leonardo DiCaprio</Name></employee></employees>'
         # xml = xml.dom.minidom.parseString(uglyxml)
         # xml_pretty_str = xml.toprettyxml()
-        # print(xml_pretty_str)
         #context = {'second': document_array}
         #return render(request,'sri_test/test.html', context)
         #return render(request, 'sri_test/test.html')
@@ -210,50 +213,63 @@ def downloadxml(request):
 
     
     if len(dataDocumentArray) != 0:
-        root = tkinter.Tk()
+        '''root = tkinter.Tk()
         root.lift()
         root.attributes('-topmost',True)
         root.after_idle(root.attributes,'-topmost',False)
         root.geometry("0x0")
         dirname = filedialog.askdirectory()
         #dirname = '/Users/cristhianimba/Downloads/'
-        print(dirname)
         root.destroy()
-        if dirname != '':
-            for i in dataDocumentArray[1:]:
+        if dirname != '':'''
 
-                claveAcceso = ''
-                if i[0] == 'Factura':
-                    if len(i) == 11:
-                        claveAcceso = i[8]
-                    if len(i) == 10:
-                        claveAcceso = i[3]
-                if i[0] == 'Comprobante de Retención':
-                    if len(i) == 11:
-                        claveAcceso = i[9]
-                    if len(i) == 10:
-                        claveAcceso = i[4]
-                if i[0] == 'Notas de Crédito':
-                    claveAcceso = i[9]
-                if i[0] == 'Notas de Débito':
-                    claveAcceso = i[9]
+        buff = io.BytesIO()
+        archive = zipfile.ZipFile(buff,'w',zipfile.ZIP_DEFLATED)
 
-                xml_response = bodyHeader2(claveAcceso)
-                xml_response = xml_response.replace("&lt;","<")
-                xml_response = xml_response.replace("&#xd;","")
-                if 'ERROR EN LA ESTRUCTURA DE LA CLAVE DE ACCESO' in xml_response:
-                    return HttpResponse(3)
-                else:        
-                    with open(os.path.join(os.path.join(os.path.expanduser('~'),dirname,i[1]+".xml")), "w+") as file1:
-                        file1.write(xml_response)
-                    #f = open(i[8]+".xml","w+")
-                    #f.write(xml_response)
-                    #print(dataDocumentArray)
-            return HttpResponse(1)
-        else:
-            return HttpResponse(2)
+        for i in dataDocumentArray[1:]:
+
+            claveAcceso = ''
+            if i[0] == 'Factura':
+                if len(i) == 11:
+                    claveAcceso = i[8]
+                if len(i) == 10:
+                    claveAcceso = i[3]
+            if i[0] == 'Comprobante de Retención':
+                if len(i) == 11:
+                    claveAcceso = i[9]
+                if len(i) == 10:
+                    claveAcceso = i[4]
+            if i[0] == 'Notas de Crédito':
+                claveAcceso = i[9]
+            if i[0] == 'Notas de Débito':
+                claveAcceso = i[9]
+
+            xml_response = bodyHeader2(claveAcceso)
+            xml_response = xml_response.replace("&lt;","<")
+            xml_response = xml_response.replace("&#xd;","")
+            if 'ERROR EN LA ESTRUCTURA DE LA CLAVE DE ACCESO' in xml_response:
+                return HttpResponse(3)
+            else:        
+                #with open(os.path.join(os.path.join(os.path.expanduser('~'),dirname,i[1]+".xml")), "w+") as file1:
+                #    file1.write(xml_response)
+                
+                archive.writestr(i[1]+'.xml',xml_response)
+                #f = open(i[8]+".xml","w+")
+                #f.write(xml_response)
+        
+        archive.close()
+        buff.flush()
+        ret_zip = buff.getvalue()
+        buff.close()
+        #response.write(ret_zip)
+        response = HttpResponse(ret_zip)
+        response['Content-Disposition'] = 'attachment, filename = "file.zip"'
+        response['Content-Type'] = 'application/x-zip'
+        return response
+        '''else:
+            return HttpResponse(2)'''
     else:
-        return HttpResponse(0)
+        return render(request, 'sri_test/comprobantes.html')
 
         
 def downloadPdf(request):
@@ -261,15 +277,14 @@ def downloadPdf(request):
     global fileUploaded, dataDocumentArray, comprobanteType
 
     if len(dataDocumentArray) != 0 :
-        root = tkinter.Tk()
+        '''root = tkinter.Tk()
         root.lift()
         root.attributes('-topmost',True)
         root.after_idle(root.attributes,'-topmost',False)
         root.geometry("0x0")
         dirname = filedialog.askdirectory(initialdir=os.getcwd(),title='Please select a directory')
         #dirname = '/Users/cristhianimba/Downloads/'
-        print(dirname)
-        root.destroy()
+        root.destroy()'''
 
         #Eestilos para los párrafos que usaran en la tabla
 
@@ -282,737 +297,755 @@ def downloadPdf(request):
         productsCenterStyle = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 7, alignment = TA_CENTER, )
         productosRightStyle = ParagraphStyle('parrafo', fontName = "Helvetica", fontSize = 7, alignment = TA_RIGHT, )
 
-
-        if dirname != '':
-            for i in dataDocumentArray[1:]:
+        buff = io.BytesIO()
+        archive = zipfile.ZipFile(buff,'w',zipfile.ZIP_DEFLATED)
         
-                arrayData = getData(i)
+
+        #if dirname != '':
+        for i in dataDocumentArray[1:]:
+
+            arrayData = getData(i)
+            
+            #Creación del PDF
+            #pathDir = dirname + '/'+ i[1] + '.pdf'
+            #c = canvas.Canvas(pathDir, pagesize=A4) 
+            #c.translate(0,(0.7)*inch)
+            
+            #response = HttpResponse(content_type='application/pdf')  
+            #response['Content-Disposition'] = 'attachment; filename="file.pdf"'  
+            buffer = io.BytesIO()
+            c = canvas.Canvas(buffer)
+            #c.rotate(180)
+
+            #rect (w,h)
+            c.roundRect(4*inch, (6.5)*inch, 287, 300, 4)
+            c.roundRect((0.2)*inch, (6.5)*inch, 260, 200, 4)
+
+            if comprobanteType == 'Factura':
+                c.rect((0.2)*inch, (5.4)*inch, 560, 75)
+
+            if comprobanteType == 'Comprobante de Retención':
+                c.rect((0.2)*inch, (5.7)*inch, 560, 50)
+
+            c.setFont("Helvetica", 8)
+            c.setFillColorRGB(255,0,0)
+            
+            #Logo
+            c.setFont("Helvetica-Bold", 28)
+            c.setFillColorRGB(255,0,0)
+            message = 'NO TIENE LOGO'
+            c.drawString(0.5*inch, (10.1)*inch, message)
+
+            c.setFont("Helvetica", 8)
+            c.setFillColorRGB(0,0,0)
+
+            #try:
                 
+            message = 'OBLIGADO A LLEVAR:                   ' + arrayData[13]
+            c.drawString((0.3)*inch, (6.6)*inch, message)
+            
+            #Second Square
 
-                #Creación del PDF
-                pathDir = dirname + '/'+ i[1] + '.pdf'
-                print(pathDir)
-                c = canvas.Canvas(pathDir, pagesize=A4)
-                c.translate(0,(0.7)*inch)
-                #c.rotate(180)
+            c.setFont("Helvetica", 14)
+            c.setFillColorRGB(0,0,0)
+            message = 'R.U.C.: ' + arrayData[6]
+            c.drawString((4.1)*inch, (10.3)*inch, message)
+            c.drawString((4.1)*inch, (10)*inch, arrayData[8])
 
-                #rect (w,h)
-                c.roundRect(4*inch, (6.5)*inch, 287, 300, 4)
-                c.roundRect((0.2)*inch, (6.5)*inch, 260, 200, 4)
+            c.setFont("Helvetica", 10)
+            message = 'No.  ' + arrayData[9]
+            c.drawString((4.1)*inch, (9.7)*inch, message)
 
-                if comprobanteType == 'Factura':
-                    c.rect((0.2)*inch, (5.4)*inch, 560, 75)
+            message = 'NÚMERO DE AUTORIZACIÓN'
+            c.drawString((4.1)*inch, (9.4)*inch, message)
+            c.setFont("Helvetica", 7)
+            c.drawString((4.1)*inch, (9.1)*inch, arrayData[0])
 
-                if comprobanteType == 'Comprobante de Retención':
-                    c.rect((0.2)*inch, (5.7)*inch, 560, 50)
+            c.setFont("Helvetica", 10)
+            message = 'FECHA Y HORA DE'
+            c.drawString((4.1)*inch, (8.8)*inch, message)
 
-                c.setFont("Helvetica", 8)
-                c.setFillColorRGB(255,0,0)
-                
-                #Logo
-                c.setFont("Helvetica-Bold", 28)
-                c.setFillColorRGB(255,0,0)
-                message = 'NO TIENE LOGO'
-                c.drawString(0.5*inch, (10.1)*inch, message)
+            fechaAut = dateutil.parser.parse(arrayData[1])
 
+            message = 'AUTORIZACIÓN:               ' + str(fechaAut)
+            c.drawString((4.1)*inch, (8.6)*inch, message)
+
+            message = 'AMBIENTE:                        ' + arrayData[2]
+            c.drawString((4.1)*inch, (8.3)*inch, message)
+
+            message = 'EMISIÓN:                           ' + arrayData[5]
+            c.drawString((4.1)*inch, (8.0)*inch, message)
+
+            message = 'CLAVE DE ACCESO'
+            c.drawString((4.1)*inch, (7.7)*inch, message)
+
+            logo = ImageReader(code128.image(arrayData[0]))
+            c.drawImage(logo,(4.2)*inch, (6.9)*inch,  width=250, height=40)
+            #message = 'HERE GOES THE IMAGE'
+            #c.drawString((4.1)*inch, (6.9)*inch, message)
+
+            c.setFont("Helvetica", 7)
+            c.drawString((4.6)*inch, (6.7)*inch, arrayData[0])
+
+            c.translate(0*inch, 0*inch)
+            #except AttributeError:
+            #    return HttpResponse(3)
+
+            if comprobanteType == 'Factura':
+
+                #First Square
+                p = Paragraph(arrayData[3], style1)
+                p.wrapOn(c, (3.4)*inch, (2.5)*inch)  # size of 'textbox' for linebreaks etc.
+                p.drawOn(c, (0.3)*inch, (8.9)*inch)
+
+                p = Paragraph(arrayData[10], style2)
+                p.wrapOn(c, (3.4)*inch, (2.5)*inch)
+                p.drawOn(c, (0.3)*inch, (8.3)*inch)
+
+
+                p = Paragraph('Dirección Matriz', productsLeftStyle)
+                p1 = Paragraph('Dirección sucursal', productsLeftStyle) 
+                p2 = Paragraph(arrayData[4], productsLeftStyle)   
+                p3 = Paragraph(arrayData[11], productsLeftStyle)
+
+                size = A4
+                dataDirecciones = [[p, p2],[p1, p3]]
+                tableDirecciones = Table(dataDirecciones, colWidths=[50, 200])
+                tableDirecciones.canv = c
+                w, heightAux = tableDirecciones.wrap(0,0)
+                tableDirecciones.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                    ("ALIGN", (1,0), (1,-1), "RIGHT"),])
+                tableDirecciones.wrapOn(c, size[0], size[1])
+                tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
+
+                #Third square
                 c.setFont("Helvetica", 8)
                 c.setFillColorRGB(0,0,0)
+                message = 'Razón Social/Nombres                                  '+ arrayData[14]
+                c.drawString((0.3)*inch, (6.3)*inch, message)
 
-                try:
-                    
-                    message = 'OBLIGADO A LLEVAR:                   ' + arrayData[13]
-                    c.drawString((0.3)*inch, (6.6)*inch, message)
-                    
-                    #Second Square
+                message = 'Identificacion                 '+ arrayData[15]
+                c.drawString((0.3)*inch, (6.1)*inch, message)
 
-                    c.setFont("Helvetica", 14)
-                    c.setFillColorRGB(0,0,0)
-                    message = 'R.U.C.: ' + arrayData[6]
-                    c.drawString((4.1)*inch, (10.3)*inch, message)
-                    c.drawString((4.1)*inch, (10)*inch, arrayData[8])
+                message = 'Fecha                            '+ arrayData[16] #+'                           Placa/Matrícula:                        '+'here goes lisence plate'
+                c.drawString((0.3)*inch, (5.9)*inch, message)
+            
+                message = 'Dirección                       '+ arrayData[12]
+                c.drawString((0.3)*inch, (5.7)*inch, message)
 
-                    c.setFont("Helvetica", 10)
-                    message = 'No.  ' + arrayData[9]
-                    c.drawString((4.1)*inch, (9.7)*inch, message)
+                # CREACION DE LA TABLA CON LOS PRODUCTOS
 
-                    message = 'NÚMERO DE AUTORIZACIÓN'
-                    c.drawString((4.1)*inch, (9.4)*inch, message)
-                    c.setFont("Helvetica", 7)
-                    c.drawString((4.1)*inch, (9.1)*inch, arrayData[0])
+                #Campos de titulo
+                p = Paragraph('Cod. Principal', style3)
+                p1 = Paragraph('Cod. Auxiliar', style3)
+                p2 = Paragraph('Cantidad', style3)
+                p3 = Paragraph('Descripción', style3)
+                p4 = Paragraph('Detalle Adicional', style3)
+                p5 = Paragraph('Precio Unitario', style3)
+                p6 = Paragraph('Subsidio', style3)
+                p7 = Paragraph('Precio sin Subsidio', style3)
+                p8 = Paragraph('Descuento', style3)
+                p9 = Paragraph('Precio Total', style3)
+                data = [[p, p1, p2, p3, p4, p5, p6,p7,p8, p9]]
 
-                    c.setFont("Helvetica", 10)
-                    message = 'FECHA Y HORA DE'
-                    c.drawString((4.1)*inch, (8.8)*inch, message)
+                size = A4
+                h = 0
+                pagina = 0
 
-                    fechaAut = dateutil.parser.parse(arrayData[1])
+                #Iteración del arreglo de datos para llenar la tabla
+                for index, item in enumerate(arrayData[32]):
+                    data.append(item)
+                    table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+                    table.canv = c
+                    w, h = table.wrap(0,0)
 
-                    message = 'AUTORIZACIÓN:               ' + str(fechaAut)
-                    c.drawString((4.1)*inch, (8.6)*inch, message)
+                    #Primera hoja del pdf
+                    if (h > 390 and pagina == 0 and index != 0 ):
+                        pagina += 1
+                        auxiliar = data
+                        auxiliar.pop()
 
-                    message = 'AMBIENTE:                        ' + arrayData[2]
-                    c.drawString((4.1)*inch, (8.3)*inch, message)
-
-                    message = 'EMISIÓN:                           ' + arrayData[5]
-                    c.drawString((4.1)*inch, (8.0)*inch, message)
-
-                    message = 'CLAVE DE ACCESO'
-                    c.drawString((4.1)*inch, (7.7)*inch, message)
-
-                    logo = ImageReader(code128.image(arrayData[0]))
-                    c.drawImage(logo,(4.2)*inch, (6.9)*inch,  width=250, height=40)
-                    #message = 'HERE GOES THE IMAGE'
-                    #c.drawString((4.1)*inch, (6.9)*inch, message)
-
-                    c.setFont("Helvetica", 7)
-                    c.drawString((4.6)*inch, (6.7)*inch, arrayData[0])
-
-                    c.translate(0*inch, 0*inch)
-                except AttributeError:
-                    return HttpResponse(3)
-
-                if comprobanteType == 'Factura':
-
-                    #First Square
-                    p = Paragraph(arrayData[3], style1)
-                    p.wrapOn(c, (3.4)*inch, (2.5)*inch)  # size of 'textbox' for linebreaks etc.
-                    p.drawOn(c, (0.3)*inch, (8.9)*inch)
-
-                    p = Paragraph(arrayData[10], style2)
-                    p.wrapOn(c, (3.4)*inch, (2.5)*inch)
-                    p.drawOn(c, (0.3)*inch, (8.3)*inch)
-
-
-                    p = Paragraph('Dirección Matriz', productsLeftStyle)
-                    p1 = Paragraph('Dirección sucursal', productsLeftStyle) 
-                    p2 = Paragraph(arrayData[4], productsLeftStyle)   
-                    p3 = Paragraph(arrayData[11], productsLeftStyle)
-
-                    size = A4
-                    dataDirecciones = [[p, p2],[p1, p3]]
-                    tableDirecciones = Table(dataDirecciones, colWidths=[50, 200])
-                    tableDirecciones.canv = c
-                    w, heightAux = tableDirecciones.wrap(0,0)
-                    tableDirecciones.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                        ("ALIGN", (1,0), (1,-1), "RIGHT"),])
-                    tableDirecciones.wrapOn(c, size[0], size[1])
-                    tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
-
-                    #Third square
-                    c.setFont("Helvetica", 8)
-                    c.setFillColorRGB(0,0,0)
-                    message = 'Razón Social/Nombres                                  '+ arrayData[14]
-                    c.drawString((0.3)*inch, (6.3)*inch, message)
-
-                    message = 'Identificacion                 '+ arrayData[15]
-                    c.drawString((0.3)*inch, (6.1)*inch, message)
-
-                    message = 'Fecha                            '+ arrayData[16] #+'                           Placa/Matrícula:                        '+'here goes lisence plate'
-                    c.drawString((0.3)*inch, (5.9)*inch, message)
-                
-                    message = 'Dirección                       '+ arrayData[12]
-                    c.drawString((0.3)*inch, (5.7)*inch, message)
-
-                    # CREACION DE LA TABLA CON LOS PRODUCTOS
-
-                    #Campos de titulo
-                    p = Paragraph('Cod. Principal', style3)
-                    p1 = Paragraph('Cod. Auxiliar', style3)
-                    p2 = Paragraph('Cantidad', style3)
-                    p3 = Paragraph('Descripción', style3)
-                    p4 = Paragraph('Detalle Adicional', style3)
-                    p5 = Paragraph('Precio Unitario', style3)
-                    p6 = Paragraph('Subsidio', style3)
-                    p7 = Paragraph('Precio sin Subsidio', style3)
-                    p8 = Paragraph('Descuento', style3)
-                    p9 = Paragraph('Precio Total', style3)
-                    data = [[p, p1, p2, p3, p4, p5, p6,p7,p8, p9]]
-
-                    size = A4
-                    h = 0
-                    pagina = 0
-
-                    #Iteración del arreglo de datos para llenar la tabla
-                    for index, item in enumerate(arrayData[32]):
-                        data.append(item)
-                        table = Table(data, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+                        table = Table(auxiliar, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+                        table.canv = c
+                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                ('BOX', (0,0), (-1,-1), 1, colors.black)])
                         table.canv = c
                         w, h = table.wrap(0,0)
-
-                        #Primera hoja del pdf
-                        if (h > 390 and pagina == 0 and index != 0 ):
-                            pagina += 1
-                            auxiliar = data
-                            auxiliar.pop()
-
-                            table = Table(auxiliar, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
-                            table.canv = c
-                            table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                            table.canv = c
-                            w, h = table.wrap(0,0)
-                            table.wrapOn(c, size[0], size[1])
-                            table.drawOn(c, (0.2)*inch, (390-h))
-
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            data = []
-                            data.append(item)
-
-                        # 2,3 ... hojas del pdf
-                        if (h > 750):
-                            auxiliar = data
-                            auxiliar.pop()
-
-                            table = Table(auxiliar, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
-                            table.canv = c
-                            table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                            table.canv = c
-                            w, h = table.wrap(0,0)
-                            table.wrapOn(c, size[0], size[1])
-                            table.drawOn(c, (0.2)*inch, (750-h))
-
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            data = []
-                            data.append(item)
-
-                    #Crea la tabla de información adicional
-                    p = Paragraph('Información Adicional', style3)
-                    p1 = Paragraph(arrayData[34], style4)
-                    infoAdicionalArray = [[p], [p1]]
-                    tableAdicional = Table(infoAdicionalArray, colWidths=[300])
-                    tableAdicional.canv = c
-                    w, heightInfoAdicional = tableAdicional.wrap(0,0)
-                    tableAdicional.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                    tableAdicional.wrapOn(c, size[0], size[1])
-
-                    #Crea la tabla de forma de pago
-                    p = Paragraph('Forma de Pago', style3)
-                    p1 = Paragraph('Valor', style3)
-                    p2 = Paragraph(arrayData[18], productsLeftStyle)
-                    p3 = Paragraph(arrayData[19], productosRightStyle)
-                    formaPagoArray = [[p, p1], [p2, p3]]
-                    tablePago = Table(formaPagoArray, colWidths=[175, 75])
-                    tablePago.canv = c
-                    w, heightFormaPago = tablePago.wrap(0,0)
-                    tablePago.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black),
-                                        ('FONTSIZE', (0, 0), (-1, -1), 7),
-                                        ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
-                    tablePago.wrapOn(c, size[0], size[1])
-
-                    #Crea la tabla de totales
-                    arregloTotales = [['SUBTOTAL 12%', arrayData[26]], 
-                                    ['SUBTOTAL 0%', arrayData[27]], 
-                                    ['SUBTOTAL NO OBJETO DE IVA', arrayData[28]], 
-                                    ['SUBTOTAL EXENTO DE IVA', arrayData[29]],
-                                    ['SUBTOTAL SIN IMPUESTOS', arrayData[20]],
-                                    ['TOTAL DESCUENTO', arrayData[17]],
-                                    ['ICE', arrayData[30]],
-                                    ['IVA 12%', arrayData[25]],
-                                    ['IRBPNR', arrayData[31]],
-                                    ['PROPINA', arrayData[21]],
-                                    ['VALOR TOTAL', arrayData[22]]]
-
-                    tableTotal = Table(arregloTotales, colWidths=[150, 50])
-                    tableTotal.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                        ("ALIGN", (1,0), (1,-1), "RIGHT"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black),
-                                        ('FONTSIZE', (0, 0), (-1, -1), 7),
-                                        ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
-                    tableTotal.wrapOn(c, size[0], size[1])
-
-                    #Crea la tabla de subsidios
-                    p = Paragraph('VALOR TOTAL SIN SUBSIDIO', productsLeftStyle)
-                    p1 = Paragraph('AHORRO POR SUBSIDIO', productsLeftStyle)
-                    p2 = Paragraph(str(arrayData[24]), productosRightStyle)
-                    p3 = Paragraph(arrayData[23], productosRightStyle)
-                    formaPagoArray = [[p, p2], [p1, p3]]
-                    tableSubsidio = Table(formaPagoArray, colWidths=[150, 50])
-                    tableSubsidio.canv = c
-                    w, heightSubsidio = tableSubsidio.wrap(0,0)
-                    tableSubsidio.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                        ("ALIGN", (1,0), (-1,-1), "RIGHT"),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                    tableSubsidio.wrapOn(c, size[0], size[1])
-
-                    tamanioTablaTotales = 0
-
-                    #Dibuja las tablas cuando alcanza en la primera hoja del pdf
-                    if (h <= 390 and pagina == 0):
-                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
                         table.wrapOn(c, size[0], size[1])
                         table.drawOn(c, (0.2)*inch, (390-h))
 
-                        #Calculo del número de filas que entran en el espacio sobrante 
-                        tamanioTablaTotales = (390-h) // 18
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        data = []
+                        data.append(item)
 
-                        #La tabla de totales entra en el espacio de la primera página
-                        if tamanioTablaTotales >= 11:
-                            tableTotal.drawOn(c, (374.5), (390-h-198))
+                    # 2,3 ... hojas del pdf
+                    if (h > 750):
+                        auxiliar = data
+                        auxiliar.pop()
 
-                            #La tabal de información adicional entra en el espacio sobrante
-                            if heightInfoAdicional <= (385-h):
-                                tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
-                            
-                                #Cuatro if's que determinan la posicion de las tablas de forma de pago y subsisio
-                                if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
-                                    tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
-                                    tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
-                                
-                                if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                                    tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-
-                                if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
-                                    tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                                
-                                if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
-                                    tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-
-                            #La tabal de información adicional no entra en el espacio sobrante
-                            else:
-
-                                #La tabla de subsidio entra en el espacio de la primera página y se
-                                #dibujan las tablas de información adicional y forma de pago en otra página
-                                if heightSubsidio <= (385-h-198):
-                                    tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                                    tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-                                
-                                #Si dibujan las tres tablas (subsidios, totales e información adicional) 
-                                # en una nueva página
-                                else: 
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                                    tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-                                    tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-
-                        #Solo una parte de la tabla de totales entra en el espacio sobrante
-                        if (tamanioTablaTotales < 11 and tamanioTablaTotales >= 1):
-
-                            auxiliarTotales = []
-                            auxiliarTotales2 = []
-
-                            #Se crea dos nuevos arreglos con una porción del arreglo principal en cada uno,
-                            #segun el espacio sobrante, para dibujarlos en páginas diferentes 
-                            for item in arregloTotales[:(tamanioTablaTotales)]:
-                                auxiliarTotales.append(item)
-                            
-                            for item in arregloTotales[tamanioTablaTotales:]:
-                                auxiliarTotales2.append(item)
-                            
-                            #Se crea las tablas y estilos con los que serán dibujadas
-                            tableTotal1 = Table(auxiliarTotales, colWidths=[150, 50])
-                            tableTotal1.canv = c
-                            w, heightAux = tableTotal1.wrap(0,0)
-                            tableTotal1.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                                ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                                ("ALIGN", (1,0), (1,-1), "RIGHT"),
-                                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                                ('BOX', (0,0), (-1,-1), 1, colors.black),
-                                                ('FONTSIZE', (0, 0), (-1, -1), 7),
-                                                ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
-                            tableTotal1.wrapOn(c, size[0], size[1])
-                            tableTotal1.drawOn(c, (374.5), (390-h-heightAux))
-
-                            tableTotal2 = Table(auxiliarTotales2, colWidths=[150, 50])
-                            tableTotal2.canv = c
-                            w, heightAux2 = tableTotal2.wrap(0,0)
-                            tableTotal2.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                                ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                                ("ALIGN", (1,0), (1,-1), "RIGHT"),
-                                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                                ('BOX', (0,0), (-1,-1), 1, colors.black),
-                                                ('FONTSIZE', (0, 0), (-1, -1), 7),
-                                                ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
-                            tableTotal2.wrapOn(c, size[0], size[1])
-
-                            #La tabla de información adicional entra en el espacio sobrante de la primera página
-                            if heightInfoAdicional <= (385-h):
-                                tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
-
-                                #La tabla de forma de pago entra en el espacio sobrante de la primera página y se dibuja 
-                                #en una nueva página las tablas de totales y subsidio
-                                if (heightFormaPago <= (380-h-heightInfoAdicional)):
-                                    tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tableTotal2.drawOn(c, (374.5), (750-heightAux2))
-                                    tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
-                                
-                                #Las tres tablas se dibujan en una nueva página 
-                                else:
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                                    tableTotal2.drawOn(c, (374.5), (750-heightAux2))
-                                    tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
-
-                            #Se dibuja las restantes tablas en una nueva página ya que ninguna entra en el epsacio sobrante
-                            #de la primera página
-                            else:
-                                c.showPage()
-                                c.translate(0,(0.7)*inch)
-                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
-                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
-
-                        #Ninguna tabla entra en el espacio sobrante
-                        if tamanioTablaTotales <= 0:
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tableTotal.drawOn(c, (374.5), (750-198))
-                            tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
-                            tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-
-                    #Dibuja las tablas en las demas hojas del pdf
-                    if(h <= 750 and pagina != 0):
+                        table = Table(auxiliar, colWidths=[50, 50, 50, 80, 80, 50, 50, 50, 50, 50, 50])
+                        table.canv = c
                         table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                                ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                        table.canv = c
+                        w, h = table.wrap(0,0)
                         table.wrapOn(c, size[0], size[1])
                         table.drawOn(c, (0.2)*inch, (750-h))
-                    
-                        #Calculo del número de filas que entran en el espacio sobrante 
-                        tamanioTablaTotales = (750-h) // 18
 
-                        #La tabla de totales entra en el espacio de la página
-                        if tamanioTablaTotales >= 11:
-                            tableTotal.drawOn(c, (374.5), (750-h-198))
-
-                            #La tabla de información adicional entra en el espacio sobrante
-                            if heightInfoAdicional <= (745-h):
-                                tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
-                            
-                                #Cuatro if's que determinan la posicion de las tablas de forma de pago y subsisio
-                                if (heightFormaPago <= (740-h-heightInfoAdicional) and heightSubsidio <= (745-h-198)):
-                                    tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
-                                    tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
-                                
-                                if (heightFormaPago > (740-h-heightInfoAdicional) and heightSubsidio > (745-h-198)):
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                                    tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-
-                                if (heightFormaPago > (740-h-heightInfoAdicional) and heightSubsidio <= (745-h-198)):
-                                    tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                                
-                                if (heightFormaPago <= (740-h-heightInfoAdicional) and heightSubsidio > (745-h-198)):
-                                    tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-
-                            #La tabal de información adicional no entra en el espacio sobrante
-                            else:
-
-                                #La tabla de subsidio entra en el espacio de la página y se
-                                #dibujan las tablas de información adicional y forma de pago en otra página
-                                if heightSubsidio <= (745-h-198):
-                                    tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                                    tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-                                
-                                #Si dibujan las tres tablas (subsidios, totales e información adicional) 
-                                # en una nueva página
-                                else: 
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                                    tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-                                    tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
-
-                        #Solo una parte de la tabla de totales entra en el espacio sobrante
-                        if (tamanioTablaTotales < 11 and tamanioTablaTotales >= 1):
-
-                            auxiliarTotales = []
-                            auxiliarTotales2 = []
-
-                            #Se crea dos nuevos arreglos con una porción del arreglo principal en cada uno,
-                            #segun el espacio sobrante, para dibujarlos en páginas diferentes 
-                            for item in arregloTotales[:(tamanioTablaTotales)]:
-                                auxiliarTotales.append(item)
-                            
-                            for item in arregloTotales[tamanioTablaTotales:]:
-                                auxiliarTotales2.append(item)
-                            
-                            #Se crea las tablas y estilos con los que serán dibujadas
-                            tableTotal1 = Table(auxiliarTotales, colWidths=[150, 50])
-                            tableTotal1.canv = c
-                            w, heightAux = tableTotal1.wrap(0,0)
-                            tableTotal1.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                                ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                                ("ALIGN", (1,0), (1,-1), "RIGHT"),
-                                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                                ('BOX', (0,0), (-1,-1), 1, colors.black),
-                                                ('FONTSIZE', (0, 0), (-1, -1), 7),
-                                                ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
-                            tableTotal1.wrapOn(c, size[0], size[1])
-                            tableTotal1.drawOn(c, (374.5), (750-h-heightAux))
-
-                            tableTotal2 = Table(auxiliarTotales2, colWidths=[150, 50])
-                            tableTotal2.canv = c
-                            w, heightAux2 = tableTotal2.wrap(0,0)
-                            tableTotal2.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                                ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                                ("ALIGN", (1,0), (1,-1), "RIGHT"),
-                                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                                ('BOX', (0,0), (-1,-1), 1, colors.black),
-                                                ('FONTSIZE', (0, 0), (-1, -1), 7),
-                                                ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
-                            tableTotal2.wrapOn(c, size[0], size[1])
-
-                            #La tabla de información adicional entra en el espacio sobrante de la primera página
-                            if heightInfoAdicional <= (745-h):
-                                tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
-
-                                #La tabla de forma de pago entra en el espacio sobrante de la primera página y se dibuja 
-                                #en una nueva página las tablas de totales y subsidio
-                                if (heightFormaPago <= (740-h-heightInfoAdicional)):
-                                    tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tableTotal2.drawOn(c, (374.5), (750-heightAux2))
-                                    tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
-                                
-                                #Las tres tablas se dibujan en una nueva página 
-                                else:
-                                    c.showPage()
-                                    c.translate(0,(0.7)*inch)
-                                    tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
-                                    tableTotal2.drawOn(c, (374.5), (750-heightAux2))
-                                    tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
-
-                            #Se dibuja las restantes tablas en una nueva página ya que ninguna entra en el epsacio sobrante
-                            #de la primera
-                            else:
-                                c.showPage()
-                                c.translate(0,(0.7)*inch)
-                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
-                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
-
-                        #Ninguna tabla entra en el espacio sobrante
-                        if tamanioTablaTotales <= 0:
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            tableTotal.drawOn(c, (374.5), (750-198))
-                            tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
-                            tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
-
-                if comprobanteType == 'Comprobante de Retención':
-
-                    #First Square
-                    p = Paragraph(arrayData[3], style1)
-                    p.wrapOn(c, (3.4)*inch, (2.5)*inch)  # size of 'textbox' for linebreaks etc.
-                    p.drawOn(c, (0.3)*inch, (8.9)*inch)
-
-                    p = Paragraph(arrayData[10], style2)
-                    p.wrapOn(c, (3.4)*inch, (2.5)*inch)
-                    p.drawOn(c, (0.3)*inch, (8.3)*inch)
-
-
-                    p = Paragraph('Dirección Matriz', productsLeftStyle)
-                    p1 = Paragraph('Dirección sucursal', productsLeftStyle) 
-                    p2 = Paragraph(arrayData[4], productsLeftStyle)   
-                    p3 = Paragraph(arrayData[14], productsLeftStyle)
-
-                    size = A4
-                    dataDirecciones = [[p, p2],[p1, p3]]
-                    tableDirecciones = Table(dataDirecciones, colWidths=[50, 200])
-                    tableDirecciones.canv = c
-                    w, heightAux = tableDirecciones.wrap(0,0)
-                    tableDirecciones.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (0,-1), "LEFT"),
-                                        ("ALIGN", (1,0), (1,-1), "RIGHT"),])
-                    tableDirecciones.wrapOn(c, size[0], size[1])
-                    tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
-
-                    #Third square
-                    c.setFont("Helvetica", 8)
-                    c.setFillColorRGB(0,0,0)
-                    message = 'Razón Social / Nombres y Apellidos:                  '+ arrayData[12]+ '                    Identificación:  ' + arrayData[15]
-                    c.drawString((0.3)*inch, (6.2)*inch, message)
-
-                    message = 'Fecha Emisión                 '+ arrayData[11]
-                    c.drawString((0.3)*inch, (5.9)*inch, message)
-
-                    # CREACION DE LA TABLA CON LOS COMPROBANTES DE RETENCION
-
-                    #Campos de titulo
-                    p = Paragraph('Comprobante', style3)
-                    p1 = Paragraph('Número', style3)
-                    p2 = Paragraph('Fecha Emisión', style3)
-                    p3 = Paragraph('Ejercicio Fiscal', style3)
-                    p4 = Paragraph('Base Imponible para la Retención', style3)
-                    p5 = Paragraph('IMPUESTO', style3)
-                    p6 = Paragraph('Porcentaje Retención', style3)
-                    p7 = Paragraph('Valor Retenido', style3)
-                    data = [[p, p1, p2, p3, p4, p5, p6,p7]]
-
-                    size = A4
-                    h = 0
-                    pagina = 0
-
-                    #Iteración del arreglo de datos para llenar la tabla
-                    for index, item in enumerate(arrayData[16]):
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        data = []
                         data.append(item)
-                        table = Table(data,  colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
-                        table.canv = c
-                        w, h = table.wrap(0,0)
 
-                        #Primera hoja del pdf
-                        if (h > 390 and pagina == 0 and index != 0 ):
-                            pagina += 1
-                            auxiliar = data
-                            auxiliar.pop()
-
-                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
-                            table.canv = c
-                            table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                #Crea la tabla de información adicional
+                p = Paragraph('Información Adicional', style3)
+                p1 = Paragraph(arrayData[34], style4)
+                infoAdicionalArray = [[p], [p1]]
+                tableAdicional = Table(infoAdicionalArray, colWidths=[300])
+                tableAdicional.canv = c
+                w, heightInfoAdicional = tableAdicional.wrap(0,0)
+                tableAdicional.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
                                     ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                            table.canv = c
-                            w, h = table.wrap(0,0)
-                            table.wrapOn(c, size[0], size[1])
-                            table.drawOn(c, (0.2)*inch, (390-h))
+                tableAdicional.wrapOn(c, size[0], size[1])
 
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            data = []
-                            data.append(item)
+                #Crea la tabla de forma de pago
+                p = Paragraph('Forma de Pago', style3)
+                p1 = Paragraph('Valor', style3)
+                p2 = Paragraph(arrayData[18], productsLeftStyle)
+                p3 = Paragraph(arrayData[19], productosRightStyle)
+                formaPagoArray = [[p, p1], [p2, p3]]
+                tablePago = Table(formaPagoArray, colWidths=[175, 75])
+                tablePago.canv = c
+                w, heightFormaPago = tablePago.wrap(0,0)
+                tablePago.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                    ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                    ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                tablePago.wrapOn(c, size[0], size[1])
 
-                        # 2,3 ... hojas del pdf
-                        if (h > 750):
-                            auxiliar = data
-                            auxiliar.pop()
+                #Crea la tabla de totales
+                arregloTotales = [['SUBTOTAL 12%', arrayData[26]], 
+                                ['SUBTOTAL 0%', arrayData[27]], 
+                                ['SUBTOTAL NO OBJETO DE IVA', arrayData[28]], 
+                                ['SUBTOTAL EXENTO DE IVA', arrayData[29]],
+                                ['SUBTOTAL SIN IMPUESTOS', arrayData[20]],
+                                ['TOTAL DESCUENTO', arrayData[17]],
+                                ['ICE', arrayData[30]],
+                                ['IVA 12%', arrayData[25]],
+                                ['IRBPNR', arrayData[31]],
+                                ['PROPINA', arrayData[21]],
+                                ['VALOR TOTAL', arrayData[22]]]
 
-                            table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
-                            table.canv = c
-                            table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                tableTotal = Table(arregloTotales, colWidths=[150, 50])
+                tableTotal.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                    ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                    ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                    ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                tableTotal.wrapOn(c, size[0], size[1])
+
+                #Crea la tabla de subsidios
+                p = Paragraph('VALOR TOTAL SIN SUBSIDIO', productsLeftStyle)
+                p1 = Paragraph('AHORRO POR SUBSIDIO', productsLeftStyle)
+                p2 = Paragraph(str(arrayData[24]), productosRightStyle)
+                p3 = Paragraph(arrayData[23], productosRightStyle)
+                formaPagoArray = [[p, p2], [p1, p3]]
+                tableSubsidio = Table(formaPagoArray, colWidths=[150, 50])
+                tableSubsidio.canv = c
+                w, heightSubsidio = tableSubsidio.wrap(0,0)
+                tableSubsidio.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                    ("ALIGN", (1,0), (-1,-1), "RIGHT"),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                tableSubsidio.wrapOn(c, size[0], size[1])
+
+                tamanioTablaTotales = 0
+
+                #Dibuja las tablas cuando alcanza en la primera hoja del pdf
+                if (h <= 390 and pagina == 0):
+                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
                                     ("ALIGN", (0,0), (-1,-1), "CENTER"),
                                     ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
                                     ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                            table.canv = c
-                            w, h = table.wrap(0,0)
-                            table.wrapOn(c, size[0], size[1])
-                            table.drawOn(c, (0.2)*inch, (750-h))
+                    table.wrapOn(c, size[0], size[1])
+                    table.drawOn(c, (0.2)*inch, (390-h))
 
-                            c.showPage()
-                            c.translate(0,(0.7)*inch)
-                            data = []
-                            data.append(item)
-                    
-                    #Crea la tabla de información adicional
-                    p = Paragraph('Información Adicional', style3)
-                    p1 = Paragraph(arrayData[23], style4)
-                    infoAdicionalArray = [[p], [p1]]
-                    tableAdicional = Table(infoAdicionalArray, colWidths=[300])
-                    tableAdicional.canv = c
-                    w, heightInfoAdicional = tableAdicional.wrap(0,0)
-                    tableAdicional.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                    tableAdicional.wrapOn(c, size[0], size[1])
+                    #Calculo del número de filas que entran en el espacio sobrante 
+                    tamanioTablaTotales = (390-h) // 18
 
-                    #Dibuja las tablas cuando alcanza en la primera hoja del pdf
-                    if (h <= 390 and pagina == 0):
-                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                        table.wrapOn(c, size[0], size[1])
-                        table.drawOn(c, (0.2)*inch, (390-h))
+                    #La tabla de totales entra en el espacio de la primera página
+                    if tamanioTablaTotales >= 11:
+                        tableTotal.drawOn(c, (374.5), (390-h-198))
 
                         #La tabal de información adicional entra en el espacio sobrante
                         if heightInfoAdicional <= (385-h):
                             tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
+                        
+                            #Cuatro if's que determinan la posicion de las tablas de forma de pago y subsisio
+                            if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
+                                tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                            
+                            if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                            if (heightFormaPago > (380-h-heightInfoAdicional) and heightSubsidio <= (385-h-198)):
+                                tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                            
+                            if (heightFormaPago <= (380-h-heightInfoAdicional) and heightSubsidio > (385-h-198)):
+                                tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
 
                         #La tabal de información adicional no entra en el espacio sobrante
+                        else:
+
+                            #La tabla de subsidio entra en el espacio de la primera página y se
+                            #dibujan las tablas de información adicional y forma de pago en otra página
+                            if heightSubsidio <= (385-h-198):
+                                tableSubsidio.drawOn(c, (374.5), (385-h-198-heightSubsidio))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                            
+                            #Si dibujan las tres tablas (subsidios, totales e información adicional) 
+                            # en una nueva página
+                            else: 
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                    #Solo una parte de la tabla de totales entra en el espacio sobrante
+                    if (tamanioTablaTotales < 11 and tamanioTablaTotales >= 1):
+
+                        auxiliarTotales = []
+                        auxiliarTotales2 = []
+
+                        #Se crea dos nuevos arreglos con una porción del arreglo principal en cada uno,
+                        #segun el espacio sobrante, para dibujarlos en páginas diferentes 
+                        for item in arregloTotales[:(tamanioTablaTotales)]:
+                            auxiliarTotales.append(item)
+                        
+                        for item in arregloTotales[tamanioTablaTotales:]:
+                            auxiliarTotales2.append(item)
+                        
+                        #Se crea las tablas y estilos con los que serán dibujadas
+                        tableTotal1 = Table(auxiliarTotales, colWidths=[150, 50])
+                        tableTotal1.canv = c
+                        w, heightAux = tableTotal1.wrap(0,0)
+                        tableTotal1.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                            ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                            ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                            ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                            ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                            ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                        tableTotal1.wrapOn(c, size[0], size[1])
+                        tableTotal1.drawOn(c, (374.5), (390-h-heightAux))
+
+                        tableTotal2 = Table(auxiliarTotales2, colWidths=[150, 50])
+                        tableTotal2.canv = c
+                        w, heightAux2 = tableTotal2.wrap(0,0)
+                        tableTotal2.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                            ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                            ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                            ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                            ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                            ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                        tableTotal2.wrapOn(c, size[0], size[1])
+
+                        #La tabla de información adicional entra en el espacio sobrante de la primera página
+                        if heightInfoAdicional <= (385-h):
+                            tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
+
+                            #La tabla de forma de pago entra en el espacio sobrante de la primera página y se dibuja 
+                            #en una nueva página las tablas de totales y subsidio
+                            if (heightFormaPago <= (380-h-heightInfoAdicional)):
+                                tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+                            
+                            #Las tres tablas se dibujan en una nueva página 
+                            else:
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+
+                        #Se dibuja las restantes tablas en una nueva página ya que ninguna entra en el epsacio sobrante
+                        #de la primera página
                         else:
                             c.showPage()
                             c.translate(0,(0.7)*inch)
                             tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                            tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                            tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
 
-                    #Dibuja las tablas en las demas hojas del pdf
-                    if(h <= 750 and pagina != 0):
-                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-                                        ("ALIGN", (0,0), (-1,-1), "CENTER"),
-                                        ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
-                                        ('BOX', (0,0), (-1,-1), 1, colors.black)])
-                        table.wrapOn(c, size[0], size[1])
-                        table.drawOn(c, (0.2)*inch, (750-h))
+                    #Ninguna tabla entra en el espacio sobrante
+                    if tamanioTablaTotales <= 0:
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        tableTotal.drawOn(c, (374.5), (750-198))
+                        tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                        tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+
+                #Dibuja las tablas en las demas hojas del pdf
+                if(h <= 750 and pagina != 0):
+                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                    table.wrapOn(c, size[0], size[1])
+                    table.drawOn(c, (0.2)*inch, (750-h))
+                
+                    #Calculo del número de filas que entran en el espacio sobrante 
+                    tamanioTablaTotales = (750-h) // 18
+
+                    #La tabla de totales entra en el espacio de la página
+                    if tamanioTablaTotales >= 11:
+                        tableTotal.drawOn(c, (374.5), (750-h-198))
 
                         #La tabla de información adicional entra en el espacio sobrante
                         if heightInfoAdicional <= (745-h):
                             tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
+                        
+                            #Cuatro if's que determinan la posicion de las tablas de forma de pago y subsisio
+                            if (heightFormaPago <= (740-h-heightInfoAdicional) and heightSubsidio <= (745-h-198)):
+                                tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
+                            
+                            if (heightFormaPago > (740-h-heightInfoAdicional) and heightSubsidio > (745-h-198)):
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                            if (heightFormaPago > (740-h-heightInfoAdicional) and heightSubsidio <= (745-h-198)):
+                                tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                            
+                            if (heightFormaPago <= (740-h-heightInfoAdicional) and heightSubsidio > (745-h-198)):
+                                tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
 
                         #La tabal de información adicional no entra en el espacio sobrante
+                        else:
+
+                            #La tabla de subsidio entra en el espacio de la página y se
+                            #dibujan las tablas de información adicional y forma de pago en otra página
+                            if heightSubsidio <= (745-h-198):
+                                tableSubsidio.drawOn(c, (374.5), (745-h-198-heightSubsidio))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                            
+                            #Si dibujan las tres tablas (subsidios, totales e información adicional) 
+                            # en una nueva página
+                            else: 
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                                tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                                tableSubsidio.drawOn(c, (374.5), (750-heightSubsidio))
+
+                    #Solo una parte de la tabla de totales entra en el espacio sobrante
+                    if (tamanioTablaTotales < 11 and tamanioTablaTotales >= 1):
+
+                        auxiliarTotales = []
+                        auxiliarTotales2 = []
+
+                        #Se crea dos nuevos arreglos con una porción del arreglo principal en cada uno,
+                        #segun el espacio sobrante, para dibujarlos en páginas diferentes 
+                        for item in arregloTotales[:(tamanioTablaTotales)]:
+                            auxiliarTotales.append(item)
+                        
+                        for item in arregloTotales[tamanioTablaTotales:]:
+                            auxiliarTotales2.append(item)
+                        
+                        #Se crea las tablas y estilos con los que serán dibujadas
+                        tableTotal1 = Table(auxiliarTotales, colWidths=[150, 50])
+                        tableTotal1.canv = c
+                        w, heightAux = tableTotal1.wrap(0,0)
+                        tableTotal1.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                            ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                            ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                            ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                            ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                            ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                        tableTotal1.wrapOn(c, size[0], size[1])
+                        tableTotal1.drawOn(c, (374.5), (750-h-heightAux))
+
+                        tableTotal2 = Table(auxiliarTotales2, colWidths=[150, 50])
+                        tableTotal2.canv = c
+                        w, heightAux2 = tableTotal2.wrap(0,0)
+                        tableTotal2.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                            ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                            ("ALIGN", (1,0), (1,-1), "RIGHT"),
+                                            ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                            ('BOX', (0,0), (-1,-1), 1, colors.black),
+                                            ('FONTSIZE', (0, 0), (-1, -1), 7),
+                                            ('TEXTFONT', (0, 0), (-1, -1), 'Helvetica')])
+                        tableTotal2.wrapOn(c, size[0], size[1])
+
+                        #La tabla de información adicional entra en el espacio sobrante de la primera página
+                        if heightInfoAdicional <= (745-h):
+                            tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
+
+                            #La tabla de forma de pago entra en el espacio sobrante de la primera página y se dibuja 
+                            #en una nueva página las tablas de totales y subsidio
+                            if (heightFormaPago <= (740-h-heightInfoAdicional)):
+                                tablePago.drawOn(c, (0.2)*inch, (740-h-heightInfoAdicional-heightFormaPago))
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+                            
+                            #Las tres tablas se dibujan en una nueva página 
+                            else:
+                                c.showPage()
+                                c.translate(0,(0.7)*inch)
+                                tablePago.drawOn(c, (0.2)*inch, (750-heightFormaPago))
+                                tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                                tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
+
+                        #Se dibuja las restantes tablas en una nueva página ya que ninguna entra en el epsacio sobrante
+                        #de la primera
                         else:
                             c.showPage()
                             c.translate(0,(0.7)*inch)
                             tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
-                   
-                c.save()
+                            tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+                            tableTotal2.drawOn(c, (374.5), (750-heightAux2))
+                            tableSubsidio.drawOn(c, (374.5), (745-heightAux2-heightSubsidio))
 
-            return HttpResponse(1)
-        else:
-            return HttpResponse(2)
+                    #Ninguna tabla entra en el espacio sobrante
+                    if tamanioTablaTotales <= 0:
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        tableTotal.drawOn(c, (374.5), (750-198))
+                        tableSubsidio.drawOn(c, (374.5), (745-198-heightSubsidio))
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+                        tablePago.drawOn(c, (0.2)*inch, (745-heightInfoAdicional-heightFormaPago))
+
+            if comprobanteType == 'Comprobante de Retención':
+
+                #First Square
+                p = Paragraph(arrayData[3], style1)
+                p.wrapOn(c, (3.4)*inch, (2.5)*inch)  # size of 'textbox' for linebreaks etc.
+                p.drawOn(c, (0.3)*inch, (8.9)*inch)
+
+                p = Paragraph(arrayData[10], style2)
+                p.wrapOn(c, (3.4)*inch, (2.5)*inch)
+                p.drawOn(c, (0.3)*inch, (8.3)*inch)
+
+
+                p = Paragraph('Dirección Matriz', productsLeftStyle)
+                p1 = Paragraph('Dirección sucursal', productsLeftStyle) 
+                p2 = Paragraph(arrayData[4], productsLeftStyle)   
+                p3 = Paragraph(arrayData[14], productsLeftStyle)
+
+                size = A4
+                dataDirecciones = [[p, p2],[p1, p3]]
+                tableDirecciones = Table(dataDirecciones, colWidths=[50, 200])
+                tableDirecciones.canv = c
+                w, heightAux = tableDirecciones.wrap(0,0)
+                tableDirecciones.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (0,-1), "LEFT"),
+                                    ("ALIGN", (1,0), (1,-1), "RIGHT"),])
+                tableDirecciones.wrapOn(c, size[0], size[1])
+                tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
+
+                #Third square
+                c.setFont("Helvetica", 8)
+                c.setFillColorRGB(0,0,0)
+                message = 'Razón Social / Nombres y Apellidos:                  '+ arrayData[12]+ '                    Identificación:  ' + arrayData[15]
+                c.drawString((0.3)*inch, (6.2)*inch, message)
+
+                message = 'Fecha Emisión                 '+ arrayData[11]
+                c.drawString((0.3)*inch, (5.9)*inch, message)
+
+                # CREACION DE LA TABLA CON LOS COMPROBANTES DE RETENCION
+
+                #Campos de titulo
+                p = Paragraph('Comprobante', style3)
+                p1 = Paragraph('Número', style3)
+                p2 = Paragraph('Fecha Emisión', style3)
+                p3 = Paragraph('Ejercicio Fiscal', style3)
+                p4 = Paragraph('Base Imponible para la Retención', style3)
+                p5 = Paragraph('IMPUESTO', style3)
+                p6 = Paragraph('Porcentaje Retención', style3)
+                p7 = Paragraph('Valor Retenido', style3)
+                data = [[p, p1, p2, p3, p4, p5, p6,p7]]
+
+                size = A4
+                h = 0
+                pagina = 0
+
+                #Iteración del arreglo de datos para llenar la tabla
+                for index, item in enumerate(arrayData[16]):
+                    data.append(item)
+                    table = Table(data,  colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
+                    table.canv = c
+                    w, h = table.wrap(0,0)
+
+                    #Primera hoja del pdf
+                    if (h > 390 and pagina == 0 and index != 0 ):
+                        pagina += 1
+                        auxiliar = data
+                        auxiliar.pop()
+
+                        table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
+                        table.canv = c
+                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                        table.canv = c
+                        w, h = table.wrap(0,0)
+                        table.wrapOn(c, size[0], size[1])
+                        table.drawOn(c, (0.2)*inch, (390-h))
+
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        data = []
+                        data.append(item)
+
+                    # 2,3 ... hojas del pdf
+                    if (h > 750):
+                        auxiliar = data
+                        auxiliar.pop()
+
+                        table = Table(auxiliar, colWidths=[65, 80, 65, 65, 85, 65, 65, 70])
+                        table.canv = c
+                        table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                        table.canv = c
+                        w, h = table.wrap(0,0)
+                        table.wrapOn(c, size[0], size[1])
+                        table.drawOn(c, (0.2)*inch, (750-h))
+
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        data = []
+                        data.append(item)
+                
+                #Crea la tabla de información adicional
+                p = Paragraph('Información Adicional', style3)
+                p1 = Paragraph(arrayData[23], style4)
+                infoAdicionalArray = [[p], [p1]]
+                tableAdicional = Table(infoAdicionalArray, colWidths=[300])
+                tableAdicional.canv = c
+                w, heightInfoAdicional = tableAdicional.wrap(0,0)
+                tableAdicional.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                tableAdicional.wrapOn(c, size[0], size[1])
+
+                #Dibuja las tablas cuando alcanza en la primera hoja del pdf
+                if (h <= 390 and pagina == 0):
+                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                    table.wrapOn(c, size[0], size[1])
+                    table.drawOn(c, (0.2)*inch, (390-h))
+
+                    #La tabal de información adicional entra en el espacio sobrante
+                    if heightInfoAdicional <= (385-h):
+                        tableAdicional.drawOn(c, (0.2)*inch, (385-h-heightInfoAdicional))
+
+                    #La tabal de información adicional no entra en el espacio sobrante
+                    else:
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+
+                #Dibuja las tablas en las demas hojas del pdf
+                if(h <= 750 and pagina != 0):
+                    table.setStyle([("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+                                    ("ALIGN", (0,0), (-1,-1), "CENTER"),
+                                    ('INNERGRID', (0,0), (-1,-1), 1, colors.black),
+                                    ('BOX', (0,0), (-1,-1), 1, colors.black)])
+                    table.wrapOn(c, size[0], size[1])
+                    table.drawOn(c, (0.2)*inch, (750-h))
+
+                    #La tabla de información adicional entra en el espacio sobrante
+                    if heightInfoAdicional <= (745-h):
+                        tableAdicional.drawOn(c, (0.2)*inch, (745-h-heightInfoAdicional))
+
+                    #La tabal de información adicional no entra en el espacio sobrante
+                    else:
+                        c.showPage()
+                        c.translate(0,(0.7)*inch)
+                        tableAdicional.drawOn(c, (0.2)*inch, (750-heightInfoAdicional))
+
+            c.showPage()    
+            c.save() 
+
+            archive.writestr(i[1]+'.pdf',buffer.getvalue())
+
+        archive.close()
+        buff.flush()
+        ret_zip = buff.getvalue()
+        buff.close()
+        #response.write(ret_zip)
+        response = HttpResponse(ret_zip)
+        response['Content-Disposition'] = 'attachment, filename = "file.zip"'
+        response['Content-Type'] = 'application/x-zip'
+        
+        return response 
+                
+            #return HttpResponse(1)
+            #else:
+            #    return HttpResponse(2)
     
     else:
-        return HttpResponse(0)
+        return render(request, 'sri_test/comprobantes.html')
 
 def comprobRecibido(request):
     global tipoComprobanete
     tipoComprobanete = 'recibido'
-    print(tipoComprobanete)
     return HttpResponse('DONE')
 
 def comprobantesEmitidos(request):
     global tipoComprobanete
     tipoComprobanete = 'emitido'
-    print(tipoComprobanete)
     return HttpResponse('DONE')
 
 def downloadeExcel(request):
@@ -1021,180 +1054,186 @@ def downloadeExcel(request):
 
     if len(dataDocumentArray) != 0 :
         
-        root = tkinter.Tk()
+        '''root = tkinter.Tk()
         root.lift()
         root.attributes('-topmost',True)
         root.after_idle(root.attributes,'-topmost',False)
-        dirname = filedialog.asksaveasfilename(filetypes = (("Excel files", "*.xlsx"),("All files", "*.*") ))
+        dirname = filedialog.asksaveasfilename(filetypes = (("Excel files", "*.xlsx"),("All files", "*.*") ))'''
         #fecha = datetime.datetime.now()
-        #print(fecha)
         #timestampStr = fecha.strftime("%d-%b-%Y (%H:%M:%S.%f)")
         #dirname = '/Users/cristhianimba/Downloads/'
-        workbook = xlsxwriter.Workbook(dirname+'.xlsx') 
-        worksheet = workbook.add_worksheet() 
-        print(dirname)
-        #root.destroy()
-        if dirname != '':
-
-            #Formats
-            data_format = workbook.add_format({'text_wrap': True, 'font_size': 8, 'border': 1, 'valign': 'vcenter'})
-            titles_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter','font_size': 10, 'border': 1,})
-            merge_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter', 'font_size': 12, 'border': 1,})
-            
-            #Tamaños de las columnas
-            worksheet.set_column('A:A',20)
-            worksheet.set_column('B:C',20)
-            worksheet.set_column('D:D',20)
-            worksheet.set_column('E:E',15)
-            worksheet.set_column('G:G',30)
-            worksheet.set_column('H:J',30)
-            worksheet.set_column('K:K',20)
-
-
-            #Tipo de campos
-            worksheet.merge_range('A1:K1', 'Información Tributaria', merge_format)
-            
-
-            #Capos descripcion
-            worksheet.write('A2', 'Tipo de Comprobante', titles_format) 
-            worksheet.write('B2', 'R.U.C', titles_format) 
-            worksheet.write('C2', 'No', titles_format) 
-            worksheet.write('D2', 'Fecha y Hora de Autorización', titles_format)
-            worksheet.write('E2', 'Ambiente', titles_format)
-            worksheet.write('F2', 'Emisión', titles_format)
-            worksheet.write('G2', 'Clave de Acceso', titles_format)
-            worksheet.write('H2', 'Nombre', titles_format)
-            worksheet.write('I2', 'Dirección Matriz', titles_format)
-            worksheet.write('J2', 'Dirección Sucursal', titles_format)
-            worksheet.write('K2', 'Obligado a Llevar', titles_format)
-
-            if comprobanteType == 'Factura':
-                
-                #Tamaños columnas
-                worksheet.set_column('L:L',30)
-                worksheet.set_column('M:M',20)
-                worksheet.set_column('N:N',10)
-                worksheet.set_column('O:O',30)
-                worksheet.set_column('P:AB',15)
-                worksheet.set_column('AC:AC',30)
-                worksheet.set_column('AD:AE',30)
-
-                #Tipo de Campos
-                worksheet.merge_range('L1:AB1', 'Información Factura', merge_format)
-                worksheet.write('AC1', 'Información Adicional', merge_format)
-                worksheet.merge_range('AD1:AE1', 'Forma de Pago', merge_format)
-
-                #Campos descripcion
-                worksheet.write('L2', 'Razón Social/Nombre', titles_format)
-                worksheet.write('M2', 'Identificación', titles_format)
-                worksheet.write('N2', 'Fecha', titles_format)
-                worksheet.write('O2', 'Dirección', titles_format)
-                worksheet.write('P2', 'Subtotal 12%', titles_format)
-                worksheet.write('Q2', 'Subtotal 0%', titles_format)
-                worksheet.write('R2', 'Subtotal No Objeto de I.V.A', titles_format)
-                worksheet.write('S2', 'Subtotal Exento I.V.A', titles_format)
-                worksheet.write('T2', 'Subtotal Sin Impuestos', titles_format)
-                worksheet.write('U2', 'Total Descuento', titles_format)
-                worksheet.write('V2', 'ICE', titles_format)
-                worksheet.write('W2', 'IVA 12%', titles_format)
-                worksheet.write('X2', 'IRBPNR', titles_format)
-                worksheet.write('Y2', 'Propina', titles_format)
-                worksheet.write('Z2', 'Valor Total', titles_format)
-                worksheet.write('AA2', 'Valor Total Sin Subsidio', titles_format)
-                worksheet.write('AB2', 'Ahorro por Subsidio', titles_format)
-
-                worksheet.write('AC2', 'Información Adicional', titles_format)
-
-                worksheet.write('AD2', 'Forma de Pago', titles_format)
-                worksheet.write('AE2', 'Valor', titles_format)
-
-            if comprobanteType == 'Comprobante de Retención':
-                
-                #Tamaños columnas
-                worksheet.set_column('L:L',20)
-                worksheet.set_column('M:M',30)
-                worksheet.set_column('N:S',20)
-                worksheet.set_column('T:T',30)
-
-                #Tipo de Campos
-                worksheet.merge_range('L1:S1', 'Información Retención', merge_format)
-                worksheet.write('T1', 'Información Adicional', merge_format)
-
-                #Campos decripcion
-                worksheet.write('L2', 'Fecha Emisión', titles_format)
-                worksheet.write('M2', 'Razón Social / Nombres y Apellidos', titles_format)
-                worksheet.write('N2', 'Identificación', titles_format)
-                worksheet.write('O2', 'Periodo Fiscal', titles_format)
-                worksheet.write('P2', 'Total IVA', titles_format)
-                worksheet.write('Q2', 'Total Renta', titles_format)
-                worksheet.write('R2', 'Total ISD', titles_format)
-                worksheet.write('S2', 'Total Retenido', titles_format)
-                worksheet.write('T2', 'Información Adicional', titles_format)
-
-            count = 2
-
-            for i in dataDocumentArray[1:]:
-                
-                count += 1
-                arrayData = getData(i)
-
-                worksheet.write('A'+str(count), arrayData[8], data_format)
-                worksheet.write('B'+str(count), arrayData[6], data_format)
-                worksheet.write('C'+str(count), arrayData[9], data_format)
-                worksheet.write('D'+str(count), arrayData[1], data_format)
-                worksheet.write('E'+str(count), arrayData[2], data_format)
-                worksheet.write('F'+str(count), arrayData[5], data_format)
-                worksheet.write('G'+str(count), arrayData[0], data_format)
-                worksheet.write('H'+str(count), arrayData[3], data_format)
-                worksheet.write('I'+str(count), arrayData[4], data_format)   
-
-                if i[0] == 'Factura':
-                    
-                    worksheet.write('J'+str(count), arrayData[11], data_format)
-                    worksheet.write('O'+str(count), arrayData[12], data_format)
-                    worksheet.write('K'+str(count), arrayData[13], data_format)
-                    worksheet.write('L'+str(count), arrayData[14], data_format)
-                    worksheet.write('M'+str(count), arrayData[15], data_format)
-                    worksheet.write('N'+str(count), arrayData[16], data_format)
-                    worksheet.write('U'+str(count), arrayData[17], data_format)
-                    worksheet.write('AD'+str(count), arrayData[18], data_format)
-                    worksheet.write('AE'+str(count), arrayData[19], data_format)
-                    worksheet.write('T'+str(count), arrayData[20], data_format)
-                    worksheet.write('Y'+str(count), arrayData[21], data_format)
-                    worksheet.write('Z'+str(count), arrayData[22], data_format)
-                    worksheet.write('AB'+str(count), arrayData[23], data_format)
-                    worksheet.write('AA'+str(count), arrayData[24], data_format)
-                    worksheet.write('P'+str(count),  arrayData[26], data_format)
-                    worksheet.write('W'+str(count),  arrayData[25], data_format)
-                    worksheet.write('Q'+str(count),  arrayData[27], data_format)
-                    worksheet.write('R'+str(count),  arrayData[28], data_format)
-                    worksheet.write('S'+str(count),  arrayData[29], data_format)
-                    worksheet.write('V'+str(count), arrayData[30], data_format)
-                    worksheet.write('X'+str(count), arrayData[31], data_format)
-                    worksheet.write('AC'+str(count), arrayData[33], data_format)
-                    
-                if i[0] == 'Comprobante de Retención':
-                    
-                    worksheet.write('J'+str(count), arrayData[14], data_format)
-                    worksheet.write('L'+str(count), arrayData[11], data_format)
-                    worksheet.write('M'+str(count), arrayData[12], data_format)
-                    worksheet.write('K'+str(count), arrayData[13], data_format)
-                    worksheet.write('N'+str(count), arrayData[15], data_format)
-                    worksheet.write('O'+str(count), arrayData[21], data_format)
-                    worksheet.write('P'+str(count), arrayData[18], data_format)
-                    worksheet.write('Q'+str(count), arrayData[17], data_format)
-                    worksheet.write('R'+str(count), arrayData[19], data_format)
-                    worksheet.write('S'+str(count), arrayData[20], data_format)
-                    worksheet.write('T'+str(count), arrayData[22], data_format)
-
-            workbook.close()
-
-            return HttpResponse(1)
         
-        else:
-            return HttpResponse(2)
+        output      = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output) 
+        worksheet = workbook.add_worksheet()
+        #root.destroy()
+        #if dirname != '':
+
+        #Formats
+        data_format = workbook.add_format({'text_wrap': True, 'font_size': 8, 'border': 1, 'valign': 'vcenter'})
+        titles_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter','font_size': 10, 'border': 1,})
+        merge_format = workbook.add_format({'text_wrap': True, 'bold': 1, 'align': 'center', 'valign': 'vcenter', 'font_size': 12, 'border': 1,})
+        
+        #Tamaños de las columnas
+        worksheet.set_column('A:A',20)
+        worksheet.set_column('B:C',20)
+        worksheet.set_column('D:D',20)
+        worksheet.set_column('E:E',15)
+        worksheet.set_column('G:G',30)
+        worksheet.set_column('H:J',30)
+        worksheet.set_column('K:K',20)
+
+
+        #Tipo de campos
+        worksheet.merge_range('A1:K1', 'Información Tributaria', merge_format)
+        
+
+        #Capos descripcion
+        worksheet.write('A2', 'Tipo de Comprobante', titles_format) 
+        worksheet.write('B2', 'R.U.C', titles_format) 
+        worksheet.write('C2', 'No', titles_format) 
+        worksheet.write('D2', 'Fecha y Hora de Autorización', titles_format)
+        worksheet.write('E2', 'Ambiente', titles_format)
+        worksheet.write('F2', 'Emisión', titles_format)
+        worksheet.write('G2', 'Clave de Acceso', titles_format)
+        worksheet.write('H2', 'Nombre', titles_format)
+        worksheet.write('I2', 'Dirección Matriz', titles_format)
+        worksheet.write('J2', 'Dirección Sucursal', titles_format)
+        worksheet.write('K2', 'Obligado a Llevar', titles_format)
+
+        if comprobanteType == 'Factura':
+            
+            #Tamaños columnas
+            worksheet.set_column('L:L',30)
+            worksheet.set_column('M:M',20)
+            worksheet.set_column('N:N',10)
+            worksheet.set_column('O:O',30)
+            worksheet.set_column('P:AB',15)
+            worksheet.set_column('AC:AC',30)
+            worksheet.set_column('AD:AE',30)
+
+            #Tipo de Campos
+            worksheet.merge_range('L1:AB1', 'Información Factura', merge_format)
+            worksheet.write('AC1', 'Información Adicional', merge_format)
+            worksheet.merge_range('AD1:AE1', 'Forma de Pago', merge_format)
+
+            #Campos descripcion
+            worksheet.write('L2', 'Razón Social/Nombre', titles_format)
+            worksheet.write('M2', 'Identificación', titles_format)
+            worksheet.write('N2', 'Fecha', titles_format)
+            worksheet.write('O2', 'Dirección', titles_format)
+            worksheet.write('P2', 'Subtotal 12%', titles_format)
+            worksheet.write('Q2', 'Subtotal 0%', titles_format)
+            worksheet.write('R2', 'Subtotal No Objeto de I.V.A', titles_format)
+            worksheet.write('S2', 'Subtotal Exento I.V.A', titles_format)
+            worksheet.write('T2', 'Subtotal Sin Impuestos', titles_format)
+            worksheet.write('U2', 'Total Descuento', titles_format)
+            worksheet.write('V2', 'ICE', titles_format)
+            worksheet.write('W2', 'IVA 12%', titles_format)
+            worksheet.write('X2', 'IRBPNR', titles_format)
+            worksheet.write('Y2', 'Propina', titles_format)
+            worksheet.write('Z2', 'Valor Total', titles_format)
+            worksheet.write('AA2', 'Valor Total Sin Subsidio', titles_format)
+            worksheet.write('AB2', 'Ahorro por Subsidio', titles_format)
+
+            worksheet.write('AC2', 'Información Adicional', titles_format)
+
+            worksheet.write('AD2', 'Forma de Pago', titles_format)
+            worksheet.write('AE2', 'Valor', titles_format)
+
+        if comprobanteType == 'Comprobante de Retención':
+            
+            #Tamaños columnas
+            worksheet.set_column('L:L',20)
+            worksheet.set_column('M:M',30)
+            worksheet.set_column('N:S',20)
+            worksheet.set_column('T:T',30)
+
+            #Tipo de Campos
+            worksheet.merge_range('L1:S1', 'Información Retención', merge_format)
+            worksheet.write('T1', 'Información Adicional', merge_format)
+
+            #Campos decripcion
+            worksheet.write('L2', 'Fecha Emisión', titles_format)
+            worksheet.write('M2', 'Razón Social / Nombres y Apellidos', titles_format)
+            worksheet.write('N2', 'Identificación', titles_format)
+            worksheet.write('O2', 'Periodo Fiscal', titles_format)
+            worksheet.write('P2', 'Total IVA', titles_format)
+            worksheet.write('Q2', 'Total Renta', titles_format)
+            worksheet.write('R2', 'Total ISD', titles_format)
+            worksheet.write('S2', 'Total Retenido', titles_format)
+            worksheet.write('T2', 'Información Adicional', titles_format)
+
+        count = 2
+
+        for i in dataDocumentArray[1:]:
+            
+            count += 1
+            arrayData = getData(i)
+
+            worksheet.write('A'+str(count), arrayData[8], data_format)
+            worksheet.write('B'+str(count), arrayData[6], data_format)
+            worksheet.write('C'+str(count), arrayData[9], data_format)
+            worksheet.write('D'+str(count), arrayData[1], data_format)
+            worksheet.write('E'+str(count), arrayData[2], data_format)
+            worksheet.write('F'+str(count), arrayData[5], data_format)
+            worksheet.write('G'+str(count), arrayData[0], data_format)
+            worksheet.write('H'+str(count), arrayData[3], data_format)
+            worksheet.write('I'+str(count), arrayData[4], data_format)   
+
+            if i[0] == 'Factura':
+                
+                worksheet.write('J'+str(count), arrayData[11], data_format)
+                worksheet.write('O'+str(count), arrayData[12], data_format)
+                worksheet.write('K'+str(count), arrayData[13], data_format)
+                worksheet.write('L'+str(count), arrayData[14], data_format)
+                worksheet.write('M'+str(count), arrayData[15], data_format)
+                worksheet.write('N'+str(count), arrayData[16], data_format)
+                worksheet.write('U'+str(count), arrayData[17], data_format)
+                worksheet.write('AD'+str(count), arrayData[18], data_format)
+                worksheet.write('AE'+str(count), arrayData[19], data_format)
+                worksheet.write('T'+str(count), arrayData[20], data_format)
+                worksheet.write('Y'+str(count), arrayData[21], data_format)
+                worksheet.write('Z'+str(count), arrayData[22], data_format)
+                worksheet.write('AB'+str(count), arrayData[23], data_format)
+                worksheet.write('AA'+str(count), arrayData[24], data_format)
+                worksheet.write('P'+str(count),  arrayData[26], data_format)
+                worksheet.write('W'+str(count),  arrayData[25], data_format)
+                worksheet.write('Q'+str(count),  arrayData[27], data_format)
+                worksheet.write('R'+str(count),  arrayData[28], data_format)
+                worksheet.write('S'+str(count),  arrayData[29], data_format)
+                worksheet.write('V'+str(count), arrayData[30], data_format)
+                worksheet.write('X'+str(count), arrayData[31], data_format)
+                worksheet.write('AC'+str(count), arrayData[33], data_format)
+                
+            if i[0] == 'Comprobante de Retención':
+                
+                worksheet.write('J'+str(count), arrayData[14], data_format)
+                worksheet.write('L'+str(count), arrayData[11], data_format)
+                worksheet.write('M'+str(count), arrayData[12], data_format)
+                worksheet.write('K'+str(count), arrayData[13], data_format)
+                worksheet.write('N'+str(count), arrayData[15], data_format)
+                worksheet.write('O'+str(count), arrayData[21], data_format)
+                worksheet.write('P'+str(count), arrayData[18], data_format)
+                worksheet.write('Q'+str(count), arrayData[17], data_format)
+                worksheet.write('R'+str(count), arrayData[19], data_format)
+                worksheet.write('S'+str(count), arrayData[20], data_format)
+                worksheet.write('T'+str(count), arrayData[22], data_format)
+
+        workbook.close()
+        xlsx_data = output.getvalue()
+
+        response = HttpResponse(content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename= Consolidado.xlsx'
+        #xlsx_data = create_excel()
+        response.write(xlsx_data)
+
+        return response
+    
+        #else:
+        #    return HttpResponse(2)
     else:
-        return HttpResponse(0)
+        return render(request, 'sri_test/comprobantes.html')
 
 def getData(arg):
     
@@ -1211,20 +1250,19 @@ def getData(arg):
         if len(arg) == 11:
             claveAcceso = arg[8]
             tipoComp = 1
-        if len(arg) == 10:
+        elif len(arg) == 10:
             claveAcceso = arg[3]
             tipoComp = 3
-    if arg[0] == 'Comprobante de Retención':
-        if len(arg) == 11:
+    elif arg[0] == 'Comprobante de Retención':
+        if len(arg) == 12:
             tipoComp = 2
             claveAcceso = arg[9]
-        if len(arg) == 10:
+        elif len(arg) == 11:
             claveAcceso = arg[4]
             tipoComp = 4
-    if arg[0] == 'Notas de Crédito':
+    elif arg[0] == 'Notas de Crédito':
         claveAcceso = arg[9]
-    if arg[0] == 'Notas de Débito':
-        claveAcceso = arg[9]
+    
 
     
     headers = {'Content-Type': 'application/xml','Accept': 'application/xml'}
@@ -1851,3 +1889,43 @@ def bodyHeader2(arg):
     return (r.text)
 
 
+def getpdf(request):  
+     return crear_pdf()
+
+def crear_pdf():
+    '''response = HttpResponse(content_type='application/pdf')  
+    response['Content-Disposition'] = 'attachment; filename="file.pdf"'  
+    p = canvas.Canvas(response)  
+    p.setFont("Times-Roman", 55)  
+    p.drawString(100,700, "Hello, Javatpoint.")  
+    p.showPage()  
+    p.save()  
+    print(response)'''
+
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer)
+    p.drawString(100, 100, "Hello world.")
+    p.showPage()
+    p.save()
+    #pdf = buffer.getvalue().decode(errors='replace')
+    #buffer.close()
+
+    buff = io.BytesIO()
+    archive = zipfile.ZipFile(buff,'w',zipfile.ZIP_DEFLATED)
+    archive.writestr('plot_1.pdf',buffer.getvalue())
+
+    
+    archive.close()
+    buff.flush()
+    ret_zip = buff.getvalue()
+    buff.close()
+    #response.write(ret_zip)
+    response = HttpResponse(ret_zip)
+    response['Content-Disposition'] = 'attachment, filename = "file.zip"'
+    response['Content-Type'] = 'application/x-zip'
+    
+    
+    '''response = HttpResponse(buff_zip)
+    response['Content-Disposition'] = 'attachment, filename = "file.pdf"'
+    response['Content-Type'] = 'application/pdf'''
+    return response

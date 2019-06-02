@@ -91,14 +91,25 @@
                             <button id="buttonSeleccion1" type="submit" class="btn btn-secondary">
                                 <i class="fa fa-eye"></i> VISUALIZAR</button>
                         </form>
-                            <button tabindex="0" id="buttonSeleccion2" type="button" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus."><i
-                                    class="fa fa-cloud-download"></i> DESCARGAR XML</button>
-                                
 
-                            <button id="buttonSeleccion3" type="button" class="btn btn-secondary"><i
+                                     
+                            <form method="GET" action="{% url 'sri_test:downloadxml' %}">
+                            {% csrf_token %}             
+                            <button tabindex="0" id="buttonSeleccion2" type="submit" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus."><i
+                                    class="fa fa-cloud-download"></i> DESCARGAR XML</button>
+                            </form>
+                            
+                            <form method="GET" action="{% url 'sri_test:downloadPdf' %}">
+                                {% csrf_token %} 
+                            <button id="buttonSeleccion3" type="submit" class="btn btn-secondary"><i
                                     class="fa fa-cloud-download"></i> DESCARGAR PDF</button>
-                            <button id="buttonSeleccion4" type="button" class="btn btn-secondary"><i
+                            </form>
+                            
+                            <form method="GET" action="{% url 'sri_test:downloadeExcel' %}">
+                                {% csrf_token %} 
+                            <button id="buttonSeleccion4" type="submit" class="btn btn-secondary"><i
                                     class="fa fa-cloud-download"></i> DESCARGAR EXCEL</button>
+                            </form>
 
                         </div>
                     </div>
@@ -353,6 +364,7 @@
                     alert( "El archivo seleccionado no es válido");
                     $("#buttonSeleccion2").removeClass("active");
                 }
+                alert("Data loades:"+data)
             });
         });
         $("#buttonSeleccion4").click(function () {
