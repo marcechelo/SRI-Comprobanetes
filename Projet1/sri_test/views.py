@@ -66,10 +66,15 @@ file = None
 comprobanteType = ''
 
 def index(request):
-    return render(request,'sri_test/comprobantes.html')
+    #return render(request, 'sri_test/comprobantes.html')
+    return Http404
 
 class sri_document(TemplateView):
-    dataArray = ['something', 'here']
+    
+    def get(self, request):
+        empty = []
+        request.session['arregloDatos'] = empty
+        return render(request, 'sri_test/comprobantes.html')
     
 # app.run(host='10.0.2.15')
 #@app.route('/read_txt', methods=['GET'])
@@ -144,7 +149,7 @@ def test(request):
     global fileUploaded, dataDocumentArray, file, comprobanteType
 
     if request.method == 'POST' and len(request.FILES) != 0:
-
+        
         control_flag = False
         uploaded_file = request.FILES['document']
         xml_readed2 = uploaded_file.readlines()
@@ -168,7 +173,8 @@ def test(request):
                 control_flag = False
                 document_array.append(obj)
                 obj = []
-            dataDocumentArray = document_array
+            request.session['arregloDatos'] = document_array
+            #dataDocumentArray = document_array
         
         for item in document_array[1:]:
             newArray.append(item)
@@ -204,13 +210,15 @@ def test(request):
         
     else:
         fileUploaded = False
+        #dataDocumentArray = []
         empty = []
-        dataDocumentArray = empty
+        request.session['arregloDatos'] = empty
         return render(request, 'sri_test/comprobantes.html')
 
 def downloadxml(request):
-    global fileUploaded, dataDocumentArray
-
+    #global fileUploaded, 
+    dataDocumentArray = request.session.get('arregloDatos')
+    print(dataDocumentArray)
     
     if len(dataDocumentArray) != 0:
         '''root = tkinter.Tk()
@@ -266,15 +274,14 @@ def downloadxml(request):
         response['Content-Disposition'] = 'attachment; filename = "ArchivosXml.zip"'
         response['Content-Type'] = 'application/x-zip'
         return response
-        '''else:
-            return HttpResponse(2)'''
     else:
         return render(request, 'sri_test/comprobantes.html')
 
         
 def downloadPdf(request):
     
-    global fileUploaded, dataDocumentArray, comprobanteType
+    global comprobanteType
+    dataDocumentArray = request.session.get('arregloDatos')
 
     if len(dataDocumentArray) != 0 :
         '''root = tkinter.Tk()
@@ -1050,7 +1057,8 @@ def comprobantesEmitidos(request):
 
 def downloadeExcel(request):
 
-    global fileUploaded, dataDocumentArray, comprobanteType
+    global comprobanteType
+    dataDocumentArray = request.session.get('arregloDatos')
 
     if len(dataDocumentArray) != 0 :
         
