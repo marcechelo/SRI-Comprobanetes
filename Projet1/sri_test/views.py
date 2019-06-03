@@ -235,9 +235,9 @@ def downloadxml(request):
                 if len(i) == 10:
                     claveAcceso = i[3]
             if i[0] == 'Comprobante de Retención':
-                if len(i) == 11:
+                if len(i) == 12:
                     claveAcceso = i[9]
-                if len(i) == 10:
+                if len(i) == 11:
                     claveAcceso = i[4]
             if i[0] == 'Notas de Crédito':
                 claveAcceso = i[9]
