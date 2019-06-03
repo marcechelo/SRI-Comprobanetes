@@ -263,7 +263,7 @@ def downloadxml(request):
         buff.close()
         #response.write(ret_zip)
         response = HttpResponse(ret_zip)
-        response['Content-Disposition'] = 'attachment, filename = "file.zip"'
+        response['Content-Disposition'] = 'attachment, filename = "ArchivosXml.zip"'
         response['Content-Type'] = 'application/x-zip'
         return response
         '''else:
@@ -1026,7 +1026,7 @@ def downloadPdf(request):
         buff.close()
         #response.write(ret_zip)
         response = HttpResponse(ret_zip)
-        response['Content-Disposition'] = 'attachment, filename = "file.zip"'
+        response['Content-Disposition'] = 'attachment, filename = "ArchivosPdf.zip"'
         response['Content-Type'] = 'application/x-zip'
         
         return response 
