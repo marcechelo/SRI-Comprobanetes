@@ -184,7 +184,7 @@ def test(request):
         elif comprobanteType == 'Comprobante de Retención':
             if len(newArray[0]) == 12 :
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 2}
-            elif len(newArray[0]) == 11:
+            elif len(newArray[0]) == 10:
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 4}
             else:
                 context = {'error':'error'}
@@ -237,7 +237,7 @@ def downloadxml(request):
             if i[0] == 'Comprobante de Retención':
                 if len(i) == 12:
                     claveAcceso = i[9]
-                if len(i) == 11:
+                if len(i) == 10:
                     claveAcceso = i[4]
             if i[0] == 'Notas de Crédito':
                 claveAcceso = i[9]
@@ -263,7 +263,7 @@ def downloadxml(request):
         buff.close()
         #response.write(ret_zip)
         response = HttpResponse(ret_zip)
-        response['Content-Disposition'] = 'attachment, filename = "ArchivosXml.zip"'
+        response['Content-Disposition'] = 'attachment; filename = "ArchivosXml.zip"'
         response['Content-Type'] = 'application/x-zip'
         return response
         '''else:
@@ -1026,7 +1026,7 @@ def downloadPdf(request):
         buff.close()
         #response.write(ret_zip)
         response = HttpResponse(ret_zip)
-        response['Content-Disposition'] = 'attachment, filename = "ArchivosPdf.zip"'
+        response['Content-Disposition'] = 'attachment; filename = "ArchivosPdf.zip"'
         response['Content-Type'] = 'application/x-zip'
         
         return response 
@@ -1257,7 +1257,7 @@ def getData(arg):
         if len(arg) == 12:
             tipoComp = 2
             claveAcceso = arg[9]
-        elif len(arg) == 11:
+        elif len(arg) == 10:
             claveAcceso = arg[4]
             tipoComp = 4
     elif arg[0] == 'Notas de Crédito':
