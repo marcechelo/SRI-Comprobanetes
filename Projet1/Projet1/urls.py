@@ -16,14 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-from django.conf.urls import url
-from django.views.generic.base import TemplateView
 
 
 urlpatterns = [
     path(r'', include('sri_test.urls')),
-    
-    #path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
 ]
 
 

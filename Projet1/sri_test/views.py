@@ -66,15 +66,15 @@ file = None
 comprobanteType = ''
 
 def index(request):
-    #return render(request, 'sri_test/comprobantes.html')
-    return Http404
+    return render(request,'sri_test/comprobantes.html')
 
 class sri_document(TemplateView):
-    
+
     def get(self, request):
         empty = []
         request.session['arregloDatos'] = empty
-        return render(request, 'sri_test/comprobantes.html')
+        request.session['tipoDeComprobante'] = empty
+        return render(request,'sri_test/comprobantes.html')
     
 # app.run(host='10.0.2.15')
 #@app.route('/read_txt', methods=['GET'])
@@ -146,10 +146,11 @@ def get_xml_sri(auth_number):
 
 def test(request):
 
-    global fileUploaded, dataDocumentArray, file, comprobanteType
+    global fileUploaded, file
 
     if request.method == 'POST' and len(request.FILES) != 0:
-        
+
+        #dataDocumentArray = []
         control_flag = False
         uploaded_file = request.FILES['document']
         xml_readed2 = uploaded_file.readlines()
@@ -173,28 +174,28 @@ def test(request):
                 control_flag = False
                 document_array.append(obj)
                 obj = []
-            request.session['arregloDatos'] = document_array
             #dataDocumentArray = document_array
+            request.session['arregloDatos'] = document_array
         
         for item in document_array[1:]:
             newArray.append(item)
 
-        comprobanteType = newArray[0][0]
+        request.session['tipoDeComprobante'] = newArray[0][0]
 
         context = {}
-        if comprobanteType == 'Factura':
+        if newArray[0][0] == 'Factura':
             if len(newArray[0]) == 11:
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 1}
             elif len(newArray[0]) == 10:
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 3}
-        elif comprobanteType == 'Comprobante de Retención':
+        elif newArray[0][0] == 'Comprobante de Retención':
             if len(newArray[0]) == 12 :
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 2}
             elif len(newArray[0]) == 10:
                 context = {'comprobantes_data': newArray, 'tipoComprobante': 4}
             else:
                 context = {'error':'error'}
-        elif (comprobanteType != 'Factura' and comprobanteType != 'Comprobante de Retención'):
+        elif (newArray[0][0] != 'Factura' and newArray[0][0]!= 'Comprobante de Retención'):
             context = {'comprobantes_data': newArray, 'tipoComprobante': 5}
         else:
             context = {'comprobantes_data': newArray, 'tipoComprobante': 0}
@@ -210,15 +211,14 @@ def test(request):
         
     else:
         fileUploaded = False
-        #dataDocumentArray = []
         empty = []
         request.session['arregloDatos'] = empty
+        request.session['tipoDeComprobante'] = empty
         return render(request, 'sri_test/comprobantes.html')
 
 def downloadxml(request):
-    #global fileUploaded, 
+
     dataDocumentArray = request.session.get('arregloDatos')
-    print(dataDocumentArray)
     
     if len(dataDocumentArray) != 0:
         '''root = tkinter.Tk()
@@ -274,14 +274,17 @@ def downloadxml(request):
         response['Content-Disposition'] = 'attachment; filename = "ArchivosXml.zip"'
         response['Content-Type'] = 'application/x-zip'
         return response
+        '''else:
+            return HttpResponse(2)'''
     else:
         return render(request, 'sri_test/comprobantes.html')
 
         
 def downloadPdf(request):
     
-    global comprobanteType
+    #global comprobanteType
     dataDocumentArray = request.session.get('arregloDatos')
+    comprobanteType = request.session.get('tipoDeComprobante')
 
     if len(dataDocumentArray) != 0 :
         '''root = tkinter.Tk()
@@ -896,13 +899,16 @@ def downloadPdf(request):
                 tableDirecciones.drawOn(c, (0.3)*inch, (7.2)*inch)
 
                 #Third square
-                c.setFont("Helvetica", 8)
+                c.setFont("Helvetica", 6)
                 c.setFillColorRGB(0,0,0)
-                message = 'Razón Social / Nombres y Apellidos:                  '+ arrayData[12]+ '                    Identificación:  ' + arrayData[15]
+                message = 'Razón Social / Nombres y Apellidos:      '+ arrayData[12]
                 c.drawString((0.3)*inch, (6.2)*inch, message)
-
-                message = 'Fecha Emisión                 '+ arrayData[11]
-                c.drawString((0.3)*inch, (5.9)*inch, message)
+                
+                message = 'Identificación:                                          '+ arrayData[15]
+                c.drawString((0.3)*inch, (6.0)*inch, message)
+                
+                message = 'Fecha Emisión:                                       '+ arrayData[11]
+                c.drawString((0.3)*inch, (5.8)*inch, message)
 
                 # CREACION DE LA TABLA CON LOS COMPROBANTES DE RETENCION
 
@@ -1057,9 +1063,9 @@ def comprobantesEmitidos(request):
 
 def downloadeExcel(request):
 
-    global comprobanteType
+    #global comprobanteType
     dataDocumentArray = request.session.get('arregloDatos')
-
+    comprobanteType = request.session.get('tipoDeComprobante')
     if len(dataDocumentArray) != 0 :
         
         '''root = tkinter.Tk()
