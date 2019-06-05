@@ -432,16 +432,16 @@ def downloadPdf(request):
                 #Third square
                 c.setFont("Helvetica", 8)
                 c.setFillColorRGB(0,0,0)
-                message = 'Razón Social/Nombres                                  '+ arrayData[14]
+                message = 'Razón Social/Nombres:       '+ arrayData[14]
                 c.drawString((0.3)*inch, (6.3)*inch, message)
 
-                message = 'Identificacion                 '+ arrayData[15]
+                message = 'Identificacion:                       '+ arrayData[15]
                 c.drawString((0.3)*inch, (6.1)*inch, message)
 
-                message = 'Fecha                            '+ arrayData[16] #+'                           Placa/Matrícula:                        '+'here goes lisence plate'
+                message = 'Fecha:                                  '+ arrayData[16] #+'                           Placa/Matrícula:                        '+'here goes lisence plate'
                 c.drawString((0.3)*inch, (5.9)*inch, message)
             
-                message = 'Dirección                       '+ arrayData[12]
+                message = 'Dirección:                             '+ arrayData[12]
                 c.drawString((0.3)*inch, (5.7)*inch, message)
 
                 # CREACION DE LA TABLA CON LOS PRODUCTOS
