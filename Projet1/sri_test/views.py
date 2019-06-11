@@ -256,7 +256,7 @@ def downloadxml(request):
             xml_response = xml_response.replace("&lt;","<")
             xml_response = xml_response.replace("&#xd;","")
             if 'ERROR EN LA ESTRUCTURA DE LA CLAVE DE ACCESO' in xml_response:
-                return HttpResponse(3)
+                return render(request, 'sri_test/comprobantes.html')
             else:        
                 #with open(os.path.join(os.path.join(os.path.expanduser('~'),dirname,i[1]+".xml")), "w+") as file1:
                 #    file1.write(xml_response)
@@ -349,57 +349,57 @@ def downloadPdf(request):
             c.setFont("Helvetica", 8)
             c.setFillColorRGB(0,0,0)
 
-            #try:
+            try:
                 
-            message = 'OBLIGADO A LLEVAR:                   ' + arrayData[13]
-            c.drawString((0.3)*inch, (6.6)*inch, message)
-            
-            #Second Square
+                message = 'OBLIGADO A LLEVAR:                   ' + arrayData[13]
+                c.drawString((0.3)*inch, (6.6)*inch, message)
+                
+                #Second Square
 
-            c.setFont("Helvetica", 14)
-            c.setFillColorRGB(0,0,0)
-            message = 'R.U.C.: ' + arrayData[6]
-            c.drawString((4.1)*inch, (10.3)*inch, message)
-            c.drawString((4.1)*inch, (10)*inch, arrayData[8])
+                c.setFont("Helvetica", 14)
+                c.setFillColorRGB(0,0,0)
+                message = 'R.U.C.: ' + arrayData[6]
+                c.drawString((4.1)*inch, (10.3)*inch, message)
+                c.drawString((4.1)*inch, (10)*inch, arrayData[8])
 
-            c.setFont("Helvetica", 10)
-            message = 'No.  ' + arrayData[9]
-            c.drawString((4.1)*inch, (9.7)*inch, message)
+                c.setFont("Helvetica", 10)
+                message = 'No.  ' + arrayData[9]
+                c.drawString((4.1)*inch, (9.7)*inch, message)
 
-            message = 'NÚMERO DE AUTORIZACIÓN'
-            c.drawString((4.1)*inch, (9.4)*inch, message)
-            c.setFont("Helvetica", 7)
-            c.drawString((4.1)*inch, (9.1)*inch, arrayData[0])
+                message = 'NÚMERO DE AUTORIZACIÓN'
+                c.drawString((4.1)*inch, (9.4)*inch, message)
+                c.setFont("Helvetica", 7)
+                c.drawString((4.1)*inch, (9.1)*inch, arrayData[0])
 
-            c.setFont("Helvetica", 10)
-            message = 'FECHA Y HORA DE'
-            c.drawString((4.1)*inch, (8.8)*inch, message)
+                c.setFont("Helvetica", 10)
+                message = 'FECHA Y HORA DE'
+                c.drawString((4.1)*inch, (8.8)*inch, message)
 
-            fechaAut = dateutil.parser.parse(arrayData[1])
+                fechaAut = dateutil.parser.parse(arrayData[1])
 
-            message = 'AUTORIZACIÓN:               ' + str(fechaAut)
-            c.drawString((4.1)*inch, (8.6)*inch, message)
+                message = 'AUTORIZACIÓN:               ' + str(fechaAut)
+                c.drawString((4.1)*inch, (8.6)*inch, message)
 
-            message = 'AMBIENTE:                        ' + arrayData[2]
-            c.drawString((4.1)*inch, (8.3)*inch, message)
+                message = 'AMBIENTE:                        ' + arrayData[2]
+                c.drawString((4.1)*inch, (8.3)*inch, message)
 
-            message = 'EMISIÓN:                           ' + arrayData[5]
-            c.drawString((4.1)*inch, (8.0)*inch, message)
+                message = 'EMISIÓN:                           ' + arrayData[5]
+                c.drawString((4.1)*inch, (8.0)*inch, message)
 
-            message = 'CLAVE DE ACCESO'
-            c.drawString((4.1)*inch, (7.7)*inch, message)
+                message = 'CLAVE DE ACCESO'
+                c.drawString((4.1)*inch, (7.7)*inch, message)
 
-            logo = ImageReader(code128.image(arrayData[0]))
-            c.drawImage(logo,(4.2)*inch, (6.9)*inch,  width=250, height=40)
-            #message = 'HERE GOES THE IMAGE'
-            #c.drawString((4.1)*inch, (6.9)*inch, message)
+                logo = ImageReader(code128.image(arrayData[0]))
+                c.drawImage(logo,(4.2)*inch, (6.9)*inch,  width=250, height=40)
+                #message = 'HERE GOES THE IMAGE'
+                #c.drawString((4.1)*inch, (6.9)*inch, message)
 
-            c.setFont("Helvetica", 7)
-            c.drawString((4.6)*inch, (6.7)*inch, arrayData[0])
+                c.setFont("Helvetica", 7)
+                c.drawString((4.6)*inch, (6.7)*inch, arrayData[0])
 
-            c.translate(0*inch, 0*inch)
-            #except AttributeError:
-            #    return HttpResponse(3)
+                c.translate(0*inch, 0*inch)
+            except AttributeError:
+                return render(request, 'sri_test/comprobantes.html')
 
             if comprobanteType == 'Factura':
 
@@ -1184,16 +1184,18 @@ def downloadeExcel(request):
             
             count += 1
             arrayData = getData(i)
-
-            worksheet.write('A'+str(count), arrayData[8], data_format)
-            worksheet.write('B'+str(count), arrayData[6], data_format)
-            worksheet.write('C'+str(count), arrayData[9], data_format)
-            worksheet.write('D'+str(count), arrayData[1], data_format)
-            worksheet.write('E'+str(count), arrayData[2], data_format)
-            worksheet.write('F'+str(count), arrayData[5], data_format)
-            worksheet.write('G'+str(count), arrayData[0], data_format)
-            worksheet.write('H'+str(count), arrayData[3], data_format)
-            worksheet.write('I'+str(count), arrayData[4], data_format)   
+            try:
+                worksheet.write('A'+str(count), arrayData[8], data_format)
+                worksheet.write('B'+str(count), arrayData[6], data_format)
+                worksheet.write('C'+str(count), arrayData[9], data_format)
+                worksheet.write('D'+str(count), arrayData[1], data_format)
+                worksheet.write('E'+str(count), arrayData[2], data_format)
+                worksheet.write('F'+str(count), arrayData[5], data_format)
+                worksheet.write('G'+str(count), arrayData[0], data_format)
+                worksheet.write('H'+str(count), arrayData[3], data_format)
+                worksheet.write('I'+str(count), arrayData[4], data_format)   
+            except AttributeError:
+                return render(request, 'sri_test/comprobantes.html')
 
             if i[0] == 'Factura':
                 
