@@ -86,31 +86,36 @@
                     <!-- Opciones para mostrar y descarga -->
 
                     <div class="col-sm-12" style="margin-left: -1rem">
-                        
-                        <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">
-                            <button id="buttonSeleccion1" type="submit" class="btn btn-secondary" style="height: 33px">
-                                <i class="fa fa-eye"></i> VISUALIZAR</button>
-                        </form>
-
-                                     
-                            <form method="GET" action="{% url 'sri_test:downloadxml' %}">
-                            {% csrf_token %}             
-                            <button tabindex="0" id="buttonSeleccion2" type="submit" class="btn btn-secondary" data-container="body" data-toggle="popover" data-placement="top" data-content="Vivamus sagittis lacus vel augue laoreet rutrum faucibus."><i
-                                    class="fa fa-cloud-download"></i> DESCARGAR XML</button>
-                            </form>
-                            
-                            <form method="GET" action="{% url 'sri_test:downloadPdf' %}">
-                                {% csrf_token %} 
-                            <button id="buttonSeleccion3" type="submit" class="btn btn-secondary"><i
-                                    class="fa fa-cloud-download"></i> DESCARGAR PDF</button>
-                            </form>
-                            
-                            <form method="GET" action="{% url 'sri_test:downloadeExcel' %}">
-                                {% csrf_token %} 
-                            <button id="buttonSeleccion4" type="submit" class="btn btn-secondary"><i
-                                    class="fa fa-cloud-download"></i> DESCARGAR EXCEL</button>
+                        <div class="btn-toolbar" role="toolbar">
+                            <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">
+                                <button id="buttonSeleccion1" type="submit" class="btn btn-secondary" style="height:35px">
+                                    <i class="fa fa-eye"></i> VISUALIZAR</button>
+                            </div>
                             </form>
 
+                            <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">             
+                                <form method="GET" action="{% url 'sri_test:downloadxml' %}">
+                                {% csrf_token %}             
+                                <button id="buttonSeleccion2" type="submit" class="btn btn-secondary" style="height:35px">
+                                    <i class="fa fa-cloud-download"></i> DESCARGAR XML</button>
+                                </form>
+                            </div>
+
+                            <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">    
+                                <form method="GET" action="{% url 'sri_test:downloadPdf' %}">
+                                    {% csrf_token %} 
+                                <button id="buttonSeleccion3" type="submit" class="btn btn-secondary" style="height:35px"><i
+                                        class="fa fa-cloud-download"></i> DESCARGAR PDF</button>
+                                </form>
+                            </div>
+
+                            <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">    
+                                <form method="GET" action="{% url 'sri_test:downloadeExcel' %}">
+                                    {% csrf_token %} 
+                                <button id="buttonSeleccion4" type="submit" class="btn btn-secondary" style= "width: 170px; height:35px"><i
+                                        class="fa fa-cloud-download"></i> DESCARGAR EXCEL</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
 

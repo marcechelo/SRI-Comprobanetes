@@ -1629,6 +1629,13 @@ def getData(arg):
                         precioSinSubsidio = '0.00' 
                     detalle8 = Paragraph(precioSinSubsidio, productosRightStyle)
 
+                    if child.find('precioTotalSinImpuesto') is not None:
+                        precioTotalSinIm = float(child.find('precioTotalSinImpuesto').text)
+                        precioTotalSinImpuesto = "{0:.2f}".format(precioTotalSinIm)
+                    else:
+                        precioTotalSinImpuesto = '0.00'
+                    detalle10 = Paragraph(precioTotalSinImpuesto, productosRightStyle)
+
                     if float(precioSinSubsidio) == 0.00:
                         subsidio = '0.00'
                     else:
@@ -1642,12 +1649,7 @@ def getData(arg):
                         descuento = ''
                     detalle9 = Paragraph(descuento, productosRightStyle)
 
-                    if child.find('precioTotalSinImpuesto') is not None:
-                        precioTotalSinIm = float(child.find('precioTotalSinImpuesto').text)
-                        precioTotalSinImpuesto = "{0:.2f}".format(precioTotalSinIm)
-                    else:
-                        precioTotalSinImpuesto = '0.00'
-                    detalle10 = Paragraph(precioTotalSinImpuesto, productosRightStyle)
+                    
 
                     detallesArray.append(detalle1)
                     detallesArray.append(detalle2)
