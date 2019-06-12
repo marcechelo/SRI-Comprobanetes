@@ -471,7 +471,7 @@ def downloadPdf(request):
                     w, h = table.wrap(0,0)
 
                     #Primera hoja del pdf
-                    if (h > 390 and pagina == 0 and index != 0 ):
+                    if (h > 370 and pagina == 0 and index != 0 ):
                         pagina += 1
                         auxiliar = data
                         auxiliar.pop()
@@ -592,7 +592,7 @@ def downloadPdf(request):
                     table.drawOn(c, (0.2)*inch, (390-h))
 
                     #Calculo del número de filas que entran en el espacio sobrante 
-                    tamanioTablaTotales = (390-h) // 18
+                    tamanioTablaTotales = (390-h) // 24
 
                     #La tabla de totales entra en el espacio de la primera página
                     if tamanioTablaTotales >= 11:
@@ -692,7 +692,7 @@ def downloadPdf(request):
 
                             #La tabla de forma de pago entra en el espacio sobrante de la primera página y se dibuja 
                             #en una nueva página las tablas de totales y subsidio
-                            if (heightFormaPago <= (380-h-heightInfoAdicional)):
+                            if (heightFormaPago <= (350-h-heightInfoAdicional)):
                                 tablePago.drawOn(c, (0.2)*inch, (380-h-heightInfoAdicional-heightFormaPago))
                                 c.showPage()
                                 c.translate(0,(0.7)*inch)
@@ -736,7 +736,7 @@ def downloadPdf(request):
                     table.drawOn(c, (0.2)*inch, (750-h))
                 
                     #Calculo del número de filas que entran en el espacio sobrante 
-                    tamanioTablaTotales = (750-h) // 18
+                    tamanioTablaTotales = (750-h) // 24
 
                     #La tabla de totales entra en el espacio de la página
                     if tamanioTablaTotales >= 11:
