@@ -96,7 +96,7 @@
                             <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">             
                                 <form method="GET" action="{% url 'sri_test:downloadxml' %}">
                                 {% csrf_token %}             
-                                <button id="buttonSeleccion2" type="submit" class="btn btn-secondary" style="height:35px">
+                                <button id="buttonSeleccion2" type="submit" class="btn btn-secondary" style= "width: 170px; height:35px">
                                     <i class="fa fa-cloud-download"></i> DESCARGAR XML</button>
                                 </form>
                             </div>
@@ -104,7 +104,7 @@
                             <div class="btn-group" role="group" aria-label="Basic example" style="align-self: initial">    
                                 <form method="GET" action="{% url 'sri_test:downloadPdf' %}">
                                     {% csrf_token %} 
-                                <button id="buttonSeleccion3" type="submit" class="btn btn-secondary" style="height:35px"><i
+                                <button id="buttonSeleccion3" type="submit" class="btn btn-secondary" style= "width: 170px; height:35px"><i
                                         class="fa fa-cloud-download"></i> DESCARGAR PDF</button>
                                 </form>
                             </div>
