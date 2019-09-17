@@ -2203,7 +2203,7 @@ def getData(arg):
                 datos.append(dirEstablecimiento)
 
                 if infoFactura.find('direccionComprador') is not None: 
-                    direccionComprador = infoFactura.find('direccionComprador').text
+                    direccionComprador = infoFactura.find('direccionComprador').text                    
                 else:
                     direccionComprador = ''
                 datos.append(direccionComprador)
@@ -2238,7 +2238,44 @@ def getData(arg):
                     totalDescuento = '0'
                 datos.append(totalDescuento)
 
-                if infoFactura.find('pagos').find('pago').find('formaPago') is not None:
+
+                print('+++++++++++++++++++++++++++++++++++++++++ info factura: ' + str(infoFactura))
+                if infoFactura.find('pagos') is not None:
+                    #print('+++++++++++++++++++++++++++++++++++++++++++ INFO FACTURA: ' + str(infoFactura.find('pagos').text))
+                    if infoFactura.find('pagos').find('pago') is None:
+                        if infoFactura.find('pagos').find('pago').find('formaPago') is None:
+                            formaPagoNumero = int(infoFactura.find('pagos').find('pago').find('formaPago').text)
+                            if formaPagoNumero == 1:
+                                formaPago = 'SIN UTILIZACION DEL SISTEMA FINANCIERO'
+                            elif formaPagoNumero == 15:
+                                formaPago = 'COMPENSACIÓN DE DEUDAS'
+                            elif formaPagoNumero == 16:
+                                formaPago = 'TARJETA DE DÉBITO'
+                            elif formaPagoNumero == 17:
+                                formaPago = 'DINERO ELECTRÓNICO'
+                            elif formaPagoNumero == 18:
+                                formaPago = 'TARJETA PREPAGO'
+                            elif formaPagoNumero == 19:
+                                formaPago = 'TARJETA DE CRÉDITO'
+                            elif formaPagoNumero == 20:
+                                formaPago = 'OTROS CON UTILIZACION DEL SISTEMA FINANCIERO'
+                            elif formaPagoNumero == 21:
+                                formaPago = 'ENDOSO DE TÍTULOS'
+                            else:
+                                formaPago = ''
+                            #print('************************************** forma pago: ' + str(formaPago))
+                            #print('************************************** numero pago: ' + str(int(infoFactura.find('pagos').find('pago').find('formaPago').text)))
+                        else:
+                            formaPago = ''
+                    else: 
+                        formaPago = ''
+                    #print('************************************** forma pago2: ' + str(infoFactura.find('pagos').text))
+                else:
+                    formaPago = ''
+                
+               
+
+                """if infoFactura.find('pagos').find('pago').find('formaPago') is not None:
                     formaPagoNumero = int(infoFactura.find('pagos').find('pago').find('formaPago').text)
                     if formaPagoNumero == 1:
                         formaPago = 'SIN UTILIZACION DEL SISTEMA FINANCIERO'
@@ -2259,14 +2296,28 @@ def getData(arg):
                     else:
                         formaPago = ''
                 else:
-                    formaPago = ''
+                    formaPago = '' """
+
                 datos.append(formaPago)
 
-                if infoFactura.find('pagos').find('pago').find('total') is not None:
+                if infoFactura.find('pagos') is not None:
+                    if infoFactura.find('pagos').find('pago') is not None:
+                        if infoFactura.find('pagos').find('pago').find('total') is not None:
+                            total0 = float(infoFactura.find('pagos').find('pago').find('total').text)
+                            total ="{0:.2f}".format(total0)
+                        else:
+                            total = '0'
+                    else:
+                        total = '0'
+                else:
+                    total = '0'
+
+                """if infoFactura.find('pagos').find('pago').find('total') is not None:
                     total0 = float(infoFactura.find('pagos').find('pago').find('total').text)
                     total ="{0:.2f}".format(total0)
                 else:
-                    total = '0'
+                    total = '0' """
+
                 datos.append(total)
 
                 if infoFactura.find('totalSinImpuestos') is not None:
